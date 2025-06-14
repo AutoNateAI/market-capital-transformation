@@ -4,6 +4,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RotateCw, Move, ZoomIn, Settings, X, GripVertical, Maximize2 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Node {
   id: string;
@@ -70,14 +73,14 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     // Control modal state
     const [showControlModal, setShowControlModal] = useState(false);
     const [controlModalPosition, setControlModalPosition] = useState({ x: 20, y: 20 });
-    const [controlModalSize, setControlModalSize] = useState({ width: 320, height: 240 });
+    const [controlModalSize, setControlModalSize] = useState({ width: 380, height: 500 });
     const [isDraggingModal, setIsDraggingModal] = useState(false);
     const [isResizingModal, setIsResizingModal] = useState(false);
     const [modalDragOffset, setModalDragOffset] = useState({ x: 0, y: 0 });
     const [modalResizeStart, setModalResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
     // Interaction mode and transform state
-    const [interactionMode, setInteractionMode] = useState<'rotate' | 'pan' | 'zoom'>('pan');
+    const [interactionMode, setInteractionMode] = useState<'pan-zoom' | 'rotate'>('pan-zoom');
     const [transform, setTransform] = useState({
       rotation: 0,
       scale: 1,
@@ -262,8 +265,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           const deltaX = coords.x - modalResizeStart.x;
           const deltaY = coords.y - modalResizeStart.y;
           
-          const newWidth = Math.max(280, Math.min(500, modalResizeStart.width + deltaX));
-          const newHeight = Math.max(200, Math.min(400, modalResizeStart.height + deltaY));
+          const newWidth = Math.max(320, Math.min(600, modalResizeStart.width + deltaX));
+          const newHeight = Math.max(400, Math.min(700, modalResizeStart.height + deltaY));
           
           setControlModalSize({ width: newWidth, height: newHeight });
         }
@@ -329,7 +332,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             ...prev,
             rotation: prev.rotation + deltaX * 0.5
           }));
-        } else if (interactionMode === 'pan') {
+        } else if (interactionMode === 'pan-zoom') {
           setTransform(prev => ({
             ...prev,
             translateX: prev.translateX + deltaX,
@@ -382,9 +385,9 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         handleEnd();
       };
 
-      // Wheel/pinch for zoom
+      // Wheel/pinch for zoom (only in pan-zoom mode)
       const handleWheel = (e: WheelEvent) => {
-        if (interactionMode !== 'zoom') return;
+        if (interactionMode !== 'pan-zoom') return;
         e.preventDefault();
         
         const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -453,6 +456,24 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         }));
         simulation.alpha(0.3).restart();
       }
+    };
+
+    const handleLinkTypeToggle = (linkType: string, enabled: boolean) => {
+      if (linkType === 'structure') return; // Don't allow disabling structure links
+      
+      setVisibleLinkTypes(prev => {
+        const newTypes = enabled 
+          ? [...prev, linkType]
+          : prev.filter(type => type !== linkType);
+        updateVisibleLinks(newTypes);
+        return newTypes;
+      });
+    };
+
+    const handleDistanceChange = (linkType: string, distance: number[]) => {
+      const newDistances = { ...linkDistances, [linkType]: distance[0] };
+      setLinkDistances(newDistances);
+      updateLinkDistances(newDistances);
     };
 
     useImperativeHandle(ref, () => ({
@@ -748,14 +769,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
     return (
       <div ref={containerRef} className="w-full h-full bg-slate-900 rounded-lg overflow-hidden relative">
-        {/* Top Controls */}
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
-          <div className="bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-white text-xs">
-            <div className="font-semibold mb-2">Mode: {interactionMode}</div>
-            <div>Touch/Click & Drag: {interactionMode === 'rotate' ? 'Rotate' : interactionMode === 'pan' ? 'Pan' : 'Use scroll for zoom'}</div>
-          </div>
-        </div>
-        
+        {/* Simplified Top Controls */}
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <Button
             onClick={() => setShowControlModal(!showControlModal)}
@@ -772,7 +786,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           </Button>
         </div>
 
-        {/* Control Modal */}
+        {/* Enhanced Control Modal */}
         {showControlModal && (
           <div
             ref={controlModalRef}
@@ -807,17 +821,18 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 flex-1 overflow-y-auto">
+              <CardContent className="space-y-4 flex-1 overflow-y-auto">
+                {/* Interaction Mode */}
                 <div>
-                  <h4 className="text-white font-medium mb-2">Interaction Mode</h4>
-                  <div className="grid grid-cols-1 gap-2">
+                  <h4 className="text-white font-medium mb-3">Interaction Mode</h4>
+                  <div className="space-y-2">
                     <Button
-                      variant={interactionMode === 'pan' ? "default" : "outline"}
-                      onClick={() => setInteractionMode('pan')}
+                      variant={interactionMode === 'pan-zoom' ? "default" : "outline"}
+                      onClick={() => setInteractionMode('pan-zoom')}
                       className="w-full justify-start text-sm py-2"
                     >
                       <Move className="w-4 h-4 mr-2" />
-                      Pan Mode
+                      Pan & Zoom Mode
                     </Button>
                     <Button
                       variant={interactionMode === 'rotate' ? "default" : "outline"}
@@ -827,17 +842,74 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                       <RotateCw className="w-4 h-4 mr-2" />
                       Rotate Mode
                     </Button>
-                    <Button
-                      variant={interactionMode === 'zoom' ? "default" : "outline"}
-                      onClick={() => setInteractionMode('zoom')}
-                      className="w-full justify-start text-sm py-2"
-                    >
-                      <ZoomIn className="w-4 h-4 mr-2" />
-                      Zoom Mode
-                    </Button>
+                  </div>
+                  <div className="text-xs text-slate-400 mt-2">
+                    {interactionMode === 'pan-zoom' 
+                      ? "Drag to pan • Scroll/pinch to zoom"
+                      : "Drag to rotate the entire graph"
+                    }
                   </div>
                 </div>
-                
+
+                {/* Link Visibility */}
+                <div>
+                  <h4 className="text-white font-medium mb-3">Link Types</h4>
+                  <div className="space-y-3">
+                    {[
+                      { type: 'structure', label: 'Structure', color: '#666', description: 'Organizational hierarchy' },
+                      { type: 'grant-flow', label: 'Grant Flow', color: '#4CAF50', description: 'Funding distribution' },
+                      { type: 'service-flow', label: 'Service Flow', color: '#2196F3', description: 'Service delivery' },
+                      { type: 'knowledge-flow', label: 'Knowledge Flow', color: '#FF9800', description: 'Information sharing' }
+                    ].map(({ type, label, color, description }) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            checked={visibleLinkTypes.includes(type)}
+                            onCheckedChange={(checked) => handleLinkTypeToggle(type, checked)}
+                            disabled={type === 'structure'}
+                          />
+                          <div>
+                            <div className="text-sm text-white flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: color }}
+                              />
+                              {label}
+                            </div>
+                            <div className="text-xs text-slate-400">{description}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Link Distances */}
+                <div>
+                  <h4 className="text-white font-medium mb-3">Link Distances</h4>
+                  <div className="space-y-4">
+                    {Object.entries(linkDistances).map(([type, distance]) => (
+                      <div key={type}>
+                        <div className="flex justify-between items-center mb-2">
+                          <Label className="text-sm text-slate-300 capitalize">
+                            {type.replace('-', ' ')}
+                          </Label>
+                          <span className="text-xs text-slate-400">{distance}</span>
+                        </div>
+                        <Slider
+                          value={[distance]}
+                          onValueChange={(value) => handleDistanceChange(type, value)}
+                          max={300}
+                          min={50}
+                          step={10}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Current Transform */}
                 <div>
                   <h4 className="text-white font-medium mb-2">Current Transform</h4>
                   <div className="text-xs text-slate-300 space-y-1">
