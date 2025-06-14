@@ -1,3 +1,4 @@
+
 import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +54,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     const { toast } = useToast();
     const [simulation, setSimulation] = useState<d3.Simulation<Node, Link> | null>(null);
     const [visibleLinkTypes, setVisibleLinkTypes] = useState<string[]>(['structure', 'grant-flow', 'service-flow', 'knowledge-flow']);
+    const [linkDistances, setLinkDistances] = useState({
+      structure: 140,
+      'grant-flow': 100,
+      'service-flow': 100,
+      'knowledge-flow': 100
+    });
     
     const [networkData, setNetworkData] = useState<NetworkData>({
       nodes: [
@@ -151,6 +158,16 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       setVisibleLinkTypes(linkTypes);
     };
 
+    const updateLinkDistances = (distances: any) => {
+      setLinkDistances(distances);
+      if (simulation) {
+        simulation.force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
+          return distances[d.type] || 100;
+        }));
+        simulation.alpha(0.3).restart();
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       downloadGraph: () => {
         const dataStr = JSON.stringify(networkData, null, 2);
@@ -167,7 +184,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       addDataToNetwork: (data: any) => {
         console.log("Adding data to network:", data);
       },
-      updateVisibleLinks
+      updateVisibleLinks,
+      updateLinkDistances
     }));
 
     const initializeRadialPositions = () => {
@@ -218,31 +236,34 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       const height = 600;
       
       const svg = d3.select(svgRef.current);
-      svg.selectAll("*").remove();
       
-      const g = svg.append("g");
+      // Only clear if this is initial render or data change, not filter change
+      if (!simulation) {
+        svg.selectAll("*").remove();
+      }
+      
+      const g = svg.select("g").empty() ? svg.append("g") : svg.select("g");
 
-      // Add zoom behavior
-      const zoom = d3.zoom()
-        .scaleExtent([0.1, 3])
-        .on("zoom", (event) => {
-          g.attr("transform", event.transform);
-        });
+      // Add zoom behavior only if not already added
+      if (!svg.property("__zoom_added__")) {
+        const zoom = d3.zoom()
+          .scaleExtent([0.1, 3])
+          .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+          });
 
-      svg.call(zoom);
+        svg.call(zoom);
+        svg.property("__zoom_added__", true);
+      }
 
-      // Initialize radial positions
-      initializeRadialPositions();
+      // Initialize radial positions only if simulation doesn't exist
+      if (!simulation) {
+        initializeRadialPositions();
+      }
 
-      const newSimulation = d3.forceSimulation(networkData.nodes)
+      const newSimulation = simulation || d3.forceSimulation(networkData.nodes)
         .force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
-          switch(d.type) {
-            case 'structure': return 80;
-            case 'grant-flow': return 100;
-            case 'service-flow': return 120;
-            case 'knowledge-flow': return 100;
-            default: return 100;
-          }
+          return linkDistances[d.type] || 100;
         }))
         .force("charge", d3.forceManyBody().strength(d => {
           switch(d.type) {
@@ -261,10 +282,15 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       // Filter links based on visibility
       const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
 
-      const link = g.append("g")
-        .selectAll("line")
-        .data(visibleLinks)
-        .join("line")
+      // Update links
+      const linkSelection = g.selectAll("line")
+        .data(visibleLinks, (d: any) => `${d.source.id || d.source}-${d.target.id || d.target}`);
+
+      linkSelection.exit().remove();
+
+      const linkEnter = linkSelection.enter().append("line");
+
+      const link = linkEnter.merge(linkSelection)
         .attr("stroke", d => {
           switch(d.type) {
             case "grant-flow": return "#4CAF50";
@@ -278,85 +304,109 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         .attr("stroke-dasharray", d => d.type === 'structure' ? "0" : "5,5")
         .style("animation", d => d.type !== 'structure' ? "flow 2s linear infinite" : "none");
 
-      // Add CSS animation for flowing lines
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes flow {
-          0% { stroke-dashoffset: 0; }
-          100% { stroke-dashoffset: 20; }
-        }
-      `;
-      document.head.appendChild(style);
+      // Add CSS animation for flowing lines only once
+      if (!document.querySelector('#flow-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'flow-animation-style';
+        style.textContent = `
+          @keyframes flow {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 20; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
 
-      const node = g.append("g")
-        .selectAll("g")
-        .data(networkData.nodes)
-        .join("g")
-        .attr("class", "cursor-pointer")
-        .call(d3.drag<any, any>()
-          .on("start", (event, d) => {
-            if (!event.active) newSimulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-          })
-          .on("drag", (event, d) => {
-            d.fx = event.x;
-            d.fy = event.y;
-          })
-          .on("end", (event, d) => {
-            if (!event.active) newSimulation.alphaTarget(0);
-            // Keep root and sector nodes fixed
-            if (d.type === 'root' || d.type === 'sector') {
+      // Update nodes only if simulation doesn't exist
+      if (!simulation) {
+        const nodeSelection = g.selectAll(".node-group")
+          .data(networkData.nodes, (d: any) => d.id);
+
+        const nodeEnter = nodeSelection.enter().append("g")
+          .attr("class", "node-group cursor-pointer")
+          .call(d3.drag<any, any>()
+            .on("start", (event, d) => {
+              if (!event.active) newSimulation.alphaTarget(0.3).restart();
               d.fx = d.x;
               d.fy = d.y;
-            } else {
-              d.fx = null;
-              d.fy = null;
-            }
-          }));
+            })
+            .on("drag", (event, d) => {
+              d.fx = event.x;
+              d.fy = event.y;
+            })
+            .on("end", (event, d) => {
+              if (!event.active) newSimulation.alphaTarget(0);
+              if (d.type === 'root' || d.type === 'sector') {
+                d.fx = d.x;
+                d.fy = d.y;
+              } else {
+                d.fx = null;
+                d.fy = null;
+              }
+            }));
 
-      node.append("circle")
-        .attr("r", (d: Node) => d.size)
-        .attr("fill", (d: Node) => d.color)
-        .attr("stroke", (d: Node) => d.color)
-        .attr("stroke-width", 2);
+        nodeEnter.append("circle")
+          .attr("r", (d: Node) => d.size)
+          .attr("fill", (d: Node) => d.color)
+          .attr("stroke", (d: Node) => d.color)
+          .attr("stroke-width", 2);
 
-      node.append("text")
-        .text((d: Node) => d.name.length > 20 ? d.name.substring(0, 18) + "..." : d.name)
-        .attr("dy", (d: Node) => d.size + 15)
-        .attr("text-anchor", "middle")
-        .style("font-size", "10px")
-        .style("fill", "white");
+        nodeEnter.append("text")
+          .text((d: Node) => d.name.length > 20 ? d.name.substring(0, 18) + "..." : d.name)
+          .attr("dy", (d: Node) => d.size + 15)
+          .attr("text-anchor", "middle")
+          .style("font-size", "10px")
+          .style("fill", "white");
 
-      node.on("click", (event, d) => {
-        if (isTraversalMode) {
-          const newPath = [...traversalPath, d];
-          onTraversalPathUpdate(newPath);
-          toast({
-            title: "Node Added to Path",
-            description: `${d.name} added to traversal path (${newPath.length} nodes)`,
-          });
-        } else {
-          onNodeSelect(d);
-        }
-      });
+        const node = nodeEnter.merge(nodeSelection);
 
-      newSimulation.on("tick", () => {
-        link
-          .attr("x1", (d: any) => d.source.x)
-          .attr("y1", (d: any) => d.source.y)
-          .attr("x2", (d: any) => d.target.x)
-          .attr("y2", (d: any) => d.target.y);
+        node.on("click", (event, d) => {
+          if (isTraversalMode) {
+            const newPath = [...traversalPath, d];
+            onTraversalPathUpdate(newPath);
+            toast({
+              title: "Node Added to Path",
+              description: `${d.name} added to traversal path (${newPath.length} nodes)`,
+            });
+          } else {
+            onNodeSelect(d);
+          }
+        });
 
-        node.attr("transform", (d: Node) => `translate(${d.x},${d.y})`);
-      });
+        newSimulation.on("tick", () => {
+          link
+            .attr("x1", (d: any) => d.source.x)
+            .attr("y1", (d: any) => d.source.y)
+            .attr("x2", (d: any) => d.target.x)
+            .attr("y2", (d: any) => d.target.y);
+
+          node.attr("transform", (d: Node) => `translate(${d.x},${d.y})`);
+        });
+      } else {
+        // Just update the link force with new distances
+        newSimulation.force("link", d3.forceLink(visibleLinks).id((d: any) => d.id).distance(d => {
+          return linkDistances[d.type] || 100;
+        }));
+        
+        newSimulation.on("tick", () => {
+          link
+            .attr("x1", (d: any) => d.source.x)
+            .attr("y1", (d: any) => d.source.y)
+            .attr("x2", (d: any) => d.target.x)
+            .attr("y2", (d: any) => d.target.y);
+
+          g.selectAll(".node-group").attr("transform", (d: Node) => `translate(${d.x},${d.y})`);
+        });
+      }
 
       setSimulation(newSimulation);
 
       return () => {
-        newSimulation.stop();
+        if (!simulation) {
+          newSimulation.stop();
+        }
       };
-    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes]);
+    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes, linkDistances]);
 
     return (
       <div className="w-full h-full bg-slate-900 rounded-lg overflow-hidden">

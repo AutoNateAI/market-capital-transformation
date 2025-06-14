@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface GraphControlsProps {
   networkRef: React.RefObject<any>;
@@ -19,16 +19,27 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
   });
 
   const updateDistance = (type: string, value: number) => {
-    setDistanceSettings(prev => ({ ...prev, [type]: value }));
+    const newSettings = { ...distanceSettings, [type]: value };
+    setDistanceSettings(newSettings);
+    
+    // Update the graph distances
+    if (networkRef.current && networkRef.current.updateLinkDistances) {
+      networkRef.current.updateLinkDistances(newSettings);
+    }
   };
 
   const resetDistances = () => {
-    setDistanceSettings({
+    const defaultSettings = {
       structure: 140,
       'grant-flow': 100,
       'service-flow': 100,
       'knowledge-flow': 100
-    });
+    };
+    setDistanceSettings(defaultSettings);
+    
+    if (networkRef.current && networkRef.current.updateLinkDistances) {
+      networkRef.current.updateLinkDistances(defaultSettings);
+    }
   };
 
   const handleFilterLinks = (linkTypes: string[]) => {

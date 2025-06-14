@@ -121,7 +121,7 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsUploadModalOpen(true)}
-                className="border-slate-600 text-white hover:bg-slate-700"
+                className="border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Upload
@@ -130,7 +130,7 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadGraph}
-                className="border-slate-600 text-white hover:bg-slate-700"
+                className="border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Graph
@@ -139,7 +139,9 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={toggleTraversalMode}
-                className={`border-slate-600 text-white hover:bg-slate-700 ${isTraversalMode ? 'bg-blue-600' : ''}`}
+                className={`border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white ${
+                  isTraversalMode ? 'bg-blue-600/70 border-blue-500' : ''
+                }`}
               >
                 <Route className="w-4 h-4 mr-2" />
                 {isTraversalMode ? 'Exit Path' : 'Path Mode'}
@@ -149,7 +151,7 @@ const Graph = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleDownloadPath}
-                  className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                  className="border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Path ({traversalPath.length})
@@ -159,7 +161,7 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPathModalOpen(true)}
-                className="border-slate-600 text-white hover:bg-slate-700"
+                className="border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
               >
                 Path Info
               </Button>
@@ -167,7 +169,7 @@ const Graph = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                className="text-red-400 hover:text-red-300 hover:bg-red-900/20 bg-slate-700/30"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
