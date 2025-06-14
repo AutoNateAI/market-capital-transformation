@@ -350,7 +350,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       // Mouse events
       const handleMouseDown = (e: MouseEvent) => {
-        if (showControlModal && controlModalRef.current?.contains(e.target as Node)) return;
+        if (showControlModal && controlModalRef.current?.contains(e.target as Element)) return;
         e.preventDefault();
         handleStart(e.clientX, e.clientY, e.button);
       };
@@ -361,7 +361,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       // Touch events
       const handleTouchStart = (e: TouchEvent) => {
-        if (showControlModal && controlModalRef.current?.contains(e.target as Node)) return;
+        if (showControlModal && controlModalRef.current?.contains(e.target as Element)) return;
         e.preventDefault();
         if (e.touches.length === 1) {
           const touch = e.touches[0];
