@@ -1,15 +1,21 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GripVertical } from "lucide-react";
+import { GripVertical, X, Maximize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface GraphLegendProps {
   isVisible: boolean;
+  onToggle: () => void;
 }
 
-export const GraphLegend = ({ isVisible }: GraphLegendProps) => {
+export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
   const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [size, setSize] = useState({ width: 288, height: 400 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const legendRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -23,28 +29,47 @@ export const GraphLegend = ({ isVisible }: GraphLegendProps) => {
     setIsDragging(true);
   };
 
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: size.width,
+      height: size.height
+    });
+    setIsResizing(true);
+  };
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-      
-      // Keep within viewport bounds
-      const maxX = window.innerWidth - 300;
-      const maxY = window.innerHeight - 400;
-      
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
-      });
+      if (isDragging) {
+        const newX = e.clientX - dragOffset.x;
+        const newY = e.clientY - dragOffset.y;
+        
+        const maxX = window.innerWidth - size.width;
+        const maxY = window.innerHeight - size.height;
+        
+        setPosition({
+          x: Math.max(0, Math.min(newX, maxX)),
+          y: Math.max(0, Math.min(newY, maxY))
+        });
+      } else if (isResizing) {
+        const deltaX = e.clientX - resizeStart.x;
+        const deltaY = e.clientY - resizeStart.y;
+        
+        const newWidth = Math.max(250, Math.min(500, resizeStart.width + deltaX));
+        const newHeight = Math.max(300, Math.min(600, resizeStart.height + deltaY));
+        
+        setSize({ width: newWidth, height: newHeight });
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      setIsResizing(false);
     };
 
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -53,7 +78,7 @@ export const GraphLegend = ({ isVisible }: GraphLegendProps) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, isResizing, dragOffset, resizeStart, size]);
 
   if (!isVisible) return null;
 
@@ -64,21 +89,33 @@ export const GraphLegend = ({ isVisible }: GraphLegendProps) => {
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-        transition: isDragging ? 'none' : 'transform 0.2s ease'
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+        transform: isDragging || isResizing ? 'scale(1.02)' : 'scale(1)',
+        transition: isDragging || isResizing ? 'none' : 'transform 0.2s ease'
       }}
     >
-      <Card className="bg-slate-800/95 border-slate-600 backdrop-blur-sm shadow-2xl w-72">
+      <Card className="bg-slate-800/95 border-slate-600 backdrop-blur-sm shadow-2xl h-full flex flex-col">
         <CardHeader 
-          className="pb-2 cursor-move"
+          className="pb-2 cursor-move flex-shrink-0"
           onMouseDown={handleMouseDown}
         >
-          <CardTitle className="text-blue-300 text-lg flex items-center gap-2">
-            <GripVertical className="w-4 h-4 text-slate-400" />
-            Network Legend
+          <CardTitle className="text-blue-300 text-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <GripVertical className="w-4 h-4 text-slate-400" />
+              Network Legend
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="text-slate-400 hover:text-white p-1 h-auto"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 flex-1 overflow-y-auto">
           {/* Node Types */}
           <div>
             <h4 className="text-white font-medium mb-2">Node Types</h4>
@@ -146,6 +183,14 @@ export const GraphLegend = ({ isVisible }: GraphLegendProps) => {
             </div>
           </div>
         </CardContent>
+        
+        {/* Resize Handle */}
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+          onMouseDown={handleResizeStart}
+        >
+          <Maximize2 className="w-3 h-3 text-slate-400 absolute bottom-1 right-1" />
+        </div>
       </Card>
     </div>
   );

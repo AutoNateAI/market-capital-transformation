@@ -3,14 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useState, useEffect } from "react";
+import { Eye } from "lucide-react";
 
 interface GraphControlsProps {
   networkRef: React.RefObject<any>;
   isTraversalMode: boolean;
   traversalPath: any[];
+  onShowConfiguration?: () => void;
 }
 
-export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: GraphControlsProps) => {
+export const GraphControls = ({ networkRef, isTraversalMode, traversalPath, onShowConfiguration }: GraphControlsProps) => {
   const [distanceSettings, setDistanceSettings] = useState({
     structure: 140,
     'grant-flow': 100,
@@ -64,6 +66,12 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
     handleFilterLinks(['structure', 'knowledge-flow']);
   };
 
+  const handleShowConfiguration = () => {
+    if (onShowConfiguration) {
+      onShowConfiguration();
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Network Stats */}
@@ -100,6 +108,14 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
           <CardTitle className="text-white text-lg">Network Controls</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <Button 
+            variant="outline" 
+            onClick={handleShowConfiguration}
+            className="w-full border-purple-600 text-purple-400 bg-slate-700/50 hover:bg-purple-600 hover:text-white hover:border-purple-500 text-sm py-2.5 justify-start"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Show New Configuration
+          </Button>
           <div className="grid grid-cols-1 gap-2">
             <Button 
               variant="outline" 

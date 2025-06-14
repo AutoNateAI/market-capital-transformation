@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,23 @@ const Graph = () => {
   const networkRef = useRef(null);
   const [isLegendVisible, setIsLegendVisible] = useState(true);
 
+  // Check authentication on mount
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('autonateai_logged_in');
+    if (!isLoggedIn) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access the network graph.",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [navigate, toast]);
+
   const handleLogout = () => {
+    // Remove login status from cache
+    localStorage.removeItem('autonateai_logged_in');
+    
     toast({
       title: "Logged Out",
       description: "You have been securely logged out of the system.",
@@ -122,6 +139,18 @@ const Graph = () => {
     }
   };
 
+  const handleShowConfiguration = () => {
+    setIsControlsOpen(false);
+    toast({
+      title: "Configuration Applied",
+      description: "New network configuration is now displayed on the graph.",
+    });
+  };
+
+  const toggleLegend = () => {
+    setIsLegendVisible(!isLegendVisible);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       {/* Header */}
@@ -145,7 +174,7 @@ const Graph = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsLegendVisible(!isLegendVisible)}
+                onClick={toggleLegend}
                 className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 px-2 md:px-3"
               >
                 <Network className="w-4 h-4 md:mr-2" />
@@ -185,6 +214,7 @@ const Graph = () => {
                       networkRef={networkRef}
                       isTraversalMode={isTraversalMode}
                       traversalPath={traversalPath}
+                      onShowConfiguration={handleShowConfiguration}
                     />
                   </div>
                 </DrawerContent>
@@ -287,8 +317,8 @@ const Graph = () => {
         </div>
       </div>
 
-      {/* Draggable Legend */}
-      <GraphLegend isVisible={isLegendVisible} />
+      {/* Resizable Draggable Legend */}
+      <GraphLegend isVisible={isLegendVisible} onToggle={toggleLegend} />
 
       {/* Modals */}
       {selectedNode && (

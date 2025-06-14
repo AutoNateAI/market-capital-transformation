@@ -25,6 +25,9 @@ const Login = () => {
     // Simulate authentication delay
     setTimeout(() => {
       if (username === "autonateai" && password === "LearnAIWithAutoNate") {
+        // Set authentication flag in localStorage
+        localStorage.setItem('autonateai_logged_in', 'true');
+        
         toast({
           title: "Authentication Successful",
           description: "Welcome to the AutoNateAI Strategic Network Graph",
