@@ -63,18 +63,14 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       'knowledge-flow': 100
     });
 
-    // 3D Camera state
-    const [camera3D, setCamera3D] = useState({
-      rotationX: 0,
-      rotationY: 0,
-      rotationZ: 0,
-      zoom: 1,
+    // Rotation and pan state
+    const [transform, setTransform] = useState({
+      rotation: 0,
+      scale: 1,
       translateX: 0,
-      translateY: 0,
-      translateZ: 0
+      translateY: 0
     });
 
-    const [is3DMode, setIs3DMode] = useState(false);
     const [mouseState, setMouseState] = useState({
       isDown: false,
       lastX: 0,
@@ -193,151 +189,131 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       return () => window.removeEventListener('resize', updateDimensions);
     }, []);
 
-    // 3D Controls keyboard handler
+    // Mouse and touch controls for rotation and panning
     useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (!is3DMode) return;
-        
-        const step = e.shiftKey ? 10 : 5;
-        const rotStep = e.shiftKey ? 10 : 5;
-        
-        switch (e.key.toLowerCase()) {
-          case 'w':
-            setCamera3D(prev => ({ ...prev, translateY: prev.translateY - step }));
-            break;
-          case 's':
-            setCamera3D(prev => ({ ...prev, translateY: prev.translateY + step }));
-            break;
-          case 'a':
-            setCamera3D(prev => ({ ...prev, translateX: prev.translateX - step }));
-            break;
-          case 'd':
-            setCamera3D(prev => ({ ...prev, translateX: prev.translateX + step }));
-            break;
-          case 'q':
-            setCamera3D(prev => ({ ...prev, translateZ: prev.translateZ - step }));
-            break;
-          case 'e':
-            setCamera3D(prev => ({ ...prev, translateZ: prev.translateZ + step }));
-            break;
-          case 'arrowup':
-            e.preventDefault();
-            setCamera3D(prev => ({ ...prev, rotationX: prev.rotationX + rotStep }));
-            break;
-          case 'arrowdown':
-            e.preventDefault();
-            setCamera3D(prev => ({ ...prev, rotationX: prev.rotationX - rotStep }));
-            break;
-          case 'arrowleft':
-            e.preventDefault();
-            setCamera3D(prev => ({ ...prev, rotationY: prev.rotationY + rotStep }));
-            break;
-          case 'arrowright':
-            e.preventDefault();
-            setCamera3D(prev => ({ ...prev, rotationY: prev.rotationY - rotStep }));
-            break;
-          case ',':
-            setCamera3D(prev => ({ ...prev, rotationZ: prev.rotationZ + rotStep }));
-            break;
-          case '.':
-            setCamera3D(prev => ({ ...prev, rotationZ: prev.rotationZ - rotStep }));
-            break;
-          case 'r':
-            setCamera3D({
-              rotationX: 0,
-              rotationY: 0,
-              rotationZ: 0,
-              zoom: 1,
-              translateX: 0,
-              translateY: 0,
-              translateZ: 0
-            });
-            break;
-          case '3':
-            setIs3DMode(!is3DMode);
-            toast({
-              title: is3DMode ? "2D Mode Activated" : "3D Mode Activated",
-              description: is3DMode ? "Switched to 2D view" : "Use WASD/QE to move, arrows/,. to rotate, R to reset",
-            });
-            break;
-        }
-      };
-
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [is3DMode, toast]);
-
-    // Mouse controls for 3D rotation
-    useEffect(() => {
-      const handleMouseDown = (e: MouseEvent) => {
-        if (!is3DMode) return;
+      const handleStart = (clientX: number, clientY: number, button: number = 0) => {
         setMouseState({
           isDown: true,
-          lastX: e.clientX,
-          lastY: e.clientY,
-          button: e.button
+          lastX: clientX,
+          lastY: clientY,
+          button: button
         });
       };
 
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!is3DMode || !mouseState.isDown) return;
+      const handleMove = (clientX: number, clientY: number) => {
+        if (!mouseState.isDown) return;
         
-        const deltaX = e.clientX - mouseState.lastX;
-        const deltaY = e.clientY - mouseState.lastY;
+        const deltaX = clientX - mouseState.lastX;
+        const deltaY = clientY - mouseState.lastY;
         
-        if (mouseState.button === 0) { // Left click - rotate
-          setCamera3D(prev => ({
+        if (mouseState.button === 0) { // Left click or touch - rotate
+          setTransform(prev => ({
             ...prev,
-            rotationY: prev.rotationY + deltaX * 0.5,
-            rotationX: prev.rotationX + deltaY * 0.5
+            rotation: prev.rotation + deltaX * 0.5
           }));
         } else if (mouseState.button === 2) { // Right click - pan
-          setCamera3D(prev => ({
+          setTransform(prev => ({
             ...prev,
-            translateX: prev.translateX + deltaX * 0.5,
-            translateY: prev.translateY + deltaY * 0.5
+            translateX: prev.translateX + deltaX,
+            translateY: prev.translateY + deltaY
           }));
         }
         
         setMouseState(prev => ({
           ...prev,
-          lastX: e.clientX,
-          lastY: e.clientY
+          lastX: clientX,
+          lastY: clientY
         }));
       };
 
-      const handleMouseUp = () => {
+      const handleEnd = () => {
         setMouseState(prev => ({ ...prev, isDown: false }));
       };
 
+      // Mouse events
+      const handleMouseDown = (e: MouseEvent) => {
+        e.preventDefault();
+        handleStart(e.clientX, e.clientY, e.button);
+      };
+
+      const handleMouseMove = (e: MouseEvent) => {
+        handleMove(e.clientX, e.clientY);
+      };
+
+      // Touch events
+      const handleTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          handleStart(touch.clientX, touch.clientY);
+        }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          handleMove(touch.clientX, touch.clientY);
+        }
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        handleEnd();
+      };
+
+      // Wheel/pinch for zoom
       const handleWheel = (e: WheelEvent) => {
-        if (!is3DMode) return;
         e.preventDefault();
         
         const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
-        setCamera3D(prev => ({
+        setTransform(prev => ({
           ...prev,
-          zoom: Math.max(0.1, Math.min(5, prev.zoom * zoomDelta))
+          scale: Math.max(0.1, Math.min(3, prev.scale * zoomDelta))
         }));
       };
 
       if (containerRef.current) {
         const container = containerRef.current;
+        
+        // Mouse events
         container.addEventListener('mousedown', handleMouseDown);
         container.addEventListener('mousemove', handleMouseMove);
-        container.addEventListener('mouseup', handleMouseUp);
+        container.addEventListener('mouseup', handleEnd);
         container.addEventListener('wheel', handleWheel, { passive: false });
         container.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        // Touch events
+        container.addEventListener('touchstart', handleTouchStart, { passive: false });
+        container.addEventListener('touchmove', handleTouchMove, { passive: false });
+        container.addEventListener('touchend', handleTouchEnd, { passive: false });
         
         return () => {
           container.removeEventListener('mousedown', handleMouseDown);
           container.removeEventListener('mousemove', handleMouseMove);
-          container.removeEventListener('mouseup', handleMouseUp);
+          container.removeEventListener('mouseup', handleEnd);
           container.removeEventListener('wheel', handleWheel);
           container.removeEventListener('contextmenu', (e) => e.preventDefault());
+          container.removeEventListener('touchstart', handleTouchStart);
+          container.removeEventListener('touchmove', handleTouchMove);
+          container.removeEventListener('touchend', handleTouchEnd);
         };
       }
-    }, [is3DMode, mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button]);
+    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button]);
+
+    // Reset transform function
+    const resetView = () => {
+      setTransform({
+        rotation: 0,
+        scale: 1,
+        translateX: 0,
+        translateY: 0
+      });
+      toast({
+        title: "View Reset",
+        description: "Graph view has been reset to default position",
+      });
+    };
 
     const updateVisibleLinks = (linkTypes: string[]) => {
       console.log("Updating visible links to:", linkTypes);
@@ -459,36 +435,15 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       
       const g = svg.select("g").empty() ? svg.append("g") : svg.select("g");
 
-      // Apply 3D transformations
-      if (is3DMode) {
-        const transform = `
-          translate(${dimensions.width/2 + camera3D.translateX}, ${dimensions.height/2 + camera3D.translateY})
-          scale(${camera3D.zoom})
-          rotateX(${camera3D.rotationX}deg)
-          rotateY(${camera3D.rotationY}deg)
-          rotateZ(${camera3D.rotationZ}deg)
-          translate(${camera3D.translateZ * 0.1}, 0)
-        `;
-        g.style("transform-origin", "center center")
-         .style("transform", transform)
-         .style("transform-style", "preserve-3d");
-      } else {
-        g.style("transform", null)
-         .style("transform-style", null);
-      }
-
-      if (!simulation && !is3DMode) {
-        const zoom = d3.zoom()
-          .scaleExtent([0.1, 3])
-          .on("zoom", (event) => {
-            if (!is3DMode) {
-              g.attr("transform", event.transform);
-            }
-          });
-
-        svg.call(zoom);
-        svg.property("__zoom_added__", true);
-      }
+      // Apply rotation and pan transformations
+      const transformString = `
+        translate(${dimensions.width/2 + transform.translateX}, ${dimensions.height/2 + transform.translateY})
+        scale(${transform.scale})
+        rotate(${transform.rotation})
+        translate(${-dimensions.width/2}, ${-dimensions.height/2})
+      `;
+      
+      g.attr("transform", transformString);
 
       if (!simulation) {
         initializeRadialPositions();
@@ -571,18 +526,16 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           .attr("class", "node-group cursor-pointer")
           .call(d3.drag<any, any>()
             .on("start", (event, d) => {
-              if (!is3DMode && !event.active) newSimulation.alphaTarget(0.3).restart();
+              if (!event.active) newSimulation.alphaTarget(0.3).restart();
               d.fx = d.x;
               d.fy = d.y;
             })
             .on("drag", (event, d) => {
-              if (!is3DMode) {
-                d.fx = event.x;
-                d.fy = event.y;
-              }
+              d.fx = event.x;
+              d.fy = event.y;
             })
             .on("end", (event, d) => {
-              if (!is3DMode && !event.active) newSimulation.alphaTarget(0);
+              if (!event.active) newSimulation.alphaTarget(0);
               if (d.type === 'root' || d.type === 'sector') {
                 d.fx = d.x;
                 d.fy = d.y;
@@ -670,35 +623,22 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           newSimulation.stop();
         }
       };
-    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes, linkDistances, dimensions, is3DMode, camera3D]);
+    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes, linkDistances, dimensions, transform]);
 
     return (
       <div ref={containerRef} className="w-full h-full bg-slate-900 rounded-lg overflow-hidden relative">
-        {is3DMode && (
-          <div className="absolute top-4 left-4 z-10 bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-white text-xs">
-            <div className="font-semibold mb-2">3D Controls:</div>
-            <div>WASD/QE: Move • Arrows/,.: Rotate</div>
-            <div>Mouse: Left=Rotate, Right=Pan</div>
-            <div>Scroll: Zoom • R: Reset • 3: Toggle Mode</div>
-          </div>
-        )}
+        <div className="absolute top-4 left-4 z-10 bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-white text-xs">
+          <div className="font-semibold mb-2">Controls:</div>
+          <div>Left Click/Touch: Rotate • Right Click: Pan</div>
+          <div>Scroll/Pinch: Zoom</div>
+        </div>
         
         <div className="absolute top-4 right-4 z-10">
           <button
-            onClick={() => {
-              setIs3DMode(!is3DMode);
-              toast({
-                title: is3DMode ? "2D Mode Activated" : "3D Mode Activated",
-                description: is3DMode ? "Switched to 2D view" : "Use WASD/QE to move, arrows/,. to rotate, R to reset",
-              });
-            }}
-            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-              is3DMode 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            onClick={resetView}
+            className="px-3 py-1 rounded text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"
           >
-            {is3DMode ? '3D' : '2D'}
+            Reset View
           </button>
         </div>
 
