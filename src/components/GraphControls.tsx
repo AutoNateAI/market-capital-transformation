@@ -41,25 +41,25 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
           <div className="space-y-2">
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-white hover:bg-slate-700"
+              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
             >
               Show All Connections
             </Button>
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-white hover:bg-slate-700"
+              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
             >
               Grant Flow Only
             </Button>
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-white hover:bg-slate-700"
+              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
             >
               Service Flow Only
             </Button>
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-white hover:bg-slate-700"
+              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
             >
               Knowledge Flow Only
             </Button>
@@ -75,7 +75,7 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
           {Object.entries(distanceSettings).map(([type, value]) => (
             <div key={type} className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-white text-sm capitalize">
+                <label className="text-slate-300 text-sm capitalize">
                   {type.replace('-', ' ')}
                 </label>
                 <span className="text-blue-300 text-sm">{value}</span>
@@ -93,7 +93,7 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
           <Button 
             onClick={resetDistances}
             variant="outline" 
-            className="w-full border-slate-600 text-white hover:bg-slate-700"
+            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             Reset Distances
           </Button>
@@ -123,15 +123,15 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
         <CardContent className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Nodes:</span>
-            <span className="text-white">25</span>
+            <span className="text-white">33</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Connections:</span>
-            <span className="text-white">48</span>
+            <span className="text-white">53</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Grant Flows:</span>
-            <span className="text-green-400">12</span>
+            <span className="text-green-400">9</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Service Flows:</span>

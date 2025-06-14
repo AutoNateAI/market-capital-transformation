@@ -58,11 +58,90 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         { id: "gov", name: "Government Sector", type: "sector", color: "#FF6B6B", size: 12, description: "Policy makers and public service providers", funding: "$50B+", population: "328M citizens" },
         { id: "edu", name: "Higher Education", type: "sector", color: "#4ECDC4", size: 12, description: "Universities, colleges, and research institutions", funding: "$70B+", population: "20M students" },
         { id: "biz", name: "Business Sector", type: "sector", color: "#45B7D1", size: 12, description: "Private companies and corporate entities", funding: "$25B+ CSR", population: "160M employees" },
+        { id: "fed", name: "Federal Agencies", type: "subsector", color: "#FF8A8A", size: 10 },
+        { id: "state", name: "State & Local", type: "subsector", color: "#FF8A8A", size: 10 },
+        { id: "research", name: "Research Universities", type: "subsector", color: "#6ED7D3", size: 10 },
+        { id: "community", name: "Community Colleges", type: "subsector", color: "#6ED7D3", size: 10 },
+        { id: "corp", name: "Large Corporations", type: "subsector", color: "#69C3E7", size: 10 },
+        { id: "sme", name: "Small-Medium Enterprises", type: "subsector", color: "#69C3E7", size: 10 },
+        { id: "hhs", name: "Health & Human Services", type: "organization", color: "#96CEB4", size: 8, grants: ["Community Health: $2.1B", "Mental Health: $1.8B"], channels: 4 },
+        { id: "doe", name: "Department of Education", type: "organization", color: "#96CEB4", size: 8, grants: ["Title I: $18.4B", "STEM: $3.2B"], channels: 3 },
+        { id: "sba", name: "Small Business Admin", type: "organization", color: "#96CEB4", size: 8, grants: ["Small Business: $500M", "Innovation: $300M"], channels: 5 },
+        { id: "nsf", name: "National Science Foundation", type: "organization", color: "#96CEB4", size: 8, grants: ["Research Grants: $8.5B"], channels: 3 },
+        { id: "nih", name: "National Institutes of Health", type: "organization", color: "#96CEB4", size: 8, grants: ["Medical Research: $42B"], channels: 4 },
+        { id: "tech-corps", name: "Tech Companies", type: "organization", color: "#96CEB4", size: 8, grants: ["Digital Equity: $2.5B", "STEM Ed: $1.2B"], channels: 6 },
+        { id: "health-corps", name: "Healthcare Companies", type: "organization", color: "#96CEB4", size: 8, grants: ["Health Equity: $1.8B"], channels: 3 },
+        { id: "health-centers", name: "Community Health Centers", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "schools", name: "Educational Institutions", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "libraries", name: "Public Libraries", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "community-centers", name: "Community Centers", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "extension", name: "Extension Programs", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "online", name: "Digital Platforms", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "mobile-units", name: "Mobile Services", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "nonprofits", name: "Nonprofit Partners", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "workforce", name: "Workforce Centers", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "rural", name: "Rural Communities", type: "community", color: "#DDA0DD", size: 5, population: "60M", needs: ["Healthcare", "Broadband", "Economic Development"] },
+        { id: "urban", name: "Urban Communities", type: "community", color: "#DDA0DD", size: 5, population: "80M", needs: ["Housing", "Education", "Healthcare"] },
+        { id: "seniors", name: "Senior Citizens", type: "community", color: "#DDA0DD", size: 5, population: "54M", needs: ["Healthcare", "Technology", "Social Services"] },
+        { id: "students", name: "Students", type: "community", color: "#DDA0DD", size: 5, population: "76M", needs: ["Education", "Financial Aid", "Career Prep"] },
+        { id: "entrepreneurs", name: "Entrepreneurs", type: "community", color: "#DDA0DD", size: 5, population: "2M", needs: ["Funding", "Mentorship", "Market Access"] },
+        { id: "chronic-patients", name: "Chronic Disease Patients", type: "community", color: "#DDA0DD", size: 5, population: "133M", needs: ["Care Coordination", "Medication", "Support"] },
+        { id: "underserved", name: "Underserved Populations", type: "community", color: "#DDA0DD", size: 5, population: "50M", needs: ["Access to Services", "Equity", "Representation"] }
       ],
       links: [
         { source: "root", target: "gov", type: "structure" },
         { source: "root", target: "edu", type: "structure" },
         { source: "root", target: "biz", type: "structure" },
+        { source: "gov", target: "fed", type: "structure" },
+        { source: "gov", target: "state", type: "structure" },
+        { source: "edu", target: "research", type: "structure" },
+        { source: "edu", target: "community", type: "structure" },
+        { source: "biz", target: "corp", type: "structure" },
+        { source: "biz", target: "sme", type: "structure" },
+        { source: "fed", target: "hhs", type: "structure" },
+        { source: "fed", target: "doe", type: "structure" },
+        { source: "state", target: "sba", type: "structure" },
+        { source: "research", target: "nsf", type: "structure" },
+        { source: "research", target: "nih", type: "structure" },
+        { source: "corp", target: "tech-corps", type: "structure" },
+        { source: "corp", target: "health-corps", type: "structure" },
+        { source: "hhs", target: "health-centers", type: "grant-flow" },
+        { source: "doe", target: "schools", type: "grant-flow" },
+        { source: "doe", target: "libraries", type: "grant-flow" },
+        { source: "sba", target: "workforce", type: "grant-flow" },
+        { source: "nsf", target: "extension", type: "grant-flow" },
+        { source: "nih", target: "health-centers", type: "grant-flow" },
+        { source: "tech-corps", target: "online", type: "grant-flow" },
+        { source: "tech-corps", target: "schools", type: "grant-flow" },
+        { source: "health-corps", target: "mobile-units", type: "grant-flow" },
+        { source: "health-centers", target: "rural", type: "service-flow" },
+        { source: "health-centers", target: "seniors", type: "service-flow" },
+        { source: "health-centers", target: "chronic-patients", type: "service-flow" },
+        { source: "schools", target: "students", type: "service-flow" },
+        { source: "schools", target: "underserved", type: "service-flow" },
+        { source: "libraries", target: "rural", type: "service-flow" },
+        { source: "libraries", target: "seniors", type: "service-flow" },
+        { source: "community-centers", target: "urban", type: "service-flow" },
+        { source: "community-centers", target: "underserved", type: "service-flow" },
+        { source: "extension", target: "rural", type: "service-flow" },
+        { source: "online", target: "students", type: "service-flow" },
+        { source: "online", target: "entrepreneurs", type: "service-flow" },
+        { source: "mobile-units", target: "rural", type: "service-flow" },
+        { source: "mobile-units", target: "underserved", type: "service-flow" },
+        { source: "workforce", target: "entrepreneurs", type: "service-flow" },
+        { source: "research", target: "extension", type: "knowledge-flow" },
+        { source: "community", target: "workforce", type: "knowledge-flow" },
+        { source: "nsf", target: "schools", type: "knowledge-flow" },
+        { source: "nih", target: "mobile-units", type: "knowledge-flow" },
+        { source: "tech-corps", target: "community-centers", type: "knowledge-flow" },
+        { source: "extension", target: "entrepreneurs", type: "knowledge-flow" },
+        { source: "online", target: "rural", type: "knowledge-flow" },
+        { source: "hhs", target: "health-corps", type: "knowledge-flow" },
+        { source: "doe", target: "tech-corps", type: "knowledge-flow" },
+        { source: "nsf", target: "tech-corps", type: "knowledge-flow" },
+        { source: "community-centers", target: "nonprofits", type: "service-flow" },
+        { source: "nonprofits", target: "underserved", type: "service-flow" },
+        { source: "nonprofits", target: "seniors", type: "service-flow" }
       ]
     });
 
@@ -80,7 +159,6 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         URL.revokeObjectURL(url);
       },
       addDataToNetwork: (data: any) => {
-        // Implementation for adding data to network
         console.log("Adding data to network:", data);
       }
     }));
@@ -96,16 +174,74 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       
       const g = svg.append("g");
 
+      // Add zoom behavior
+      const zoom = d3.zoom()
+        .scaleExtent([0.1, 3])
+        .on("zoom", (event) => {
+          g.attr("transform", event.transform);
+        });
+
+      svg.call(zoom);
+
+      // Position nodes in radial hierarchy
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      // Initialize positions
+      networkData.nodes.forEach(d => {
+        if (d.type === 'root') {
+          d.x = centerX;
+          d.y = centerY;
+        } else if (d.type === 'sector') {
+          const sectorAngles = {
+            'gov': -Math.PI / 2,
+            'edu': -Math.PI / 2 + (2 * Math.PI / 3),
+            'biz': -Math.PI / 2 + (4 * Math.PI / 3)
+          };
+          const angle = sectorAngles[d.id as keyof typeof sectorAngles];
+          if (angle !== undefined) {
+            d.x = centerX + Math.cos(angle) * 150;
+            d.y = centerY + Math.sin(angle) * 150;
+          }
+        }
+      });
+
       const newSimulation = d3.forceSimulation(networkData.nodes)
-        .force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-300))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
+          switch(d.type) {
+            case 'structure': return 80;
+            case 'grant-flow': return 100;
+            case 'service-flow': return 120;
+            case 'knowledge-flow': return 100;
+            default: return 100;
+          }
+        }))
+        .force("charge", d3.forceManyBody().strength(d => {
+          switch(d.type) {
+            case 'root': return -800;
+            case 'sector': return -600;
+            case 'subsector': return -400;
+            case 'organization': return -300;
+            case 'distribution': return -250;
+            case 'community': return -200;
+            default: return -200;
+          }
+        }))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(d => d.size + 5));
 
       const link = g.append("g")
         .selectAll("line")
         .data(networkData.links)
         .join("line")
-        .attr("stroke", "#999")
+        .attr("stroke", d => {
+          switch(d.type) {
+            case "grant-flow": return "#4CAF50";
+            case "service-flow": return "#2196F3";
+            case "knowledge-flow": return "#FF9800";
+            default: return "#666";
+          }
+        })
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", 2);
 
@@ -180,7 +316,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           width="100%"
           height="100%"
           viewBox="0 0 800 600"
-          className="w-full h-full"
+          className="w-full h-full cursor-move"
         />
       </div>
     );
