@@ -66,6 +66,35 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
 
   return (
     <div className="p-6 space-y-6">
+      {/* Network Stats - Moved to top */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white text-lg">Network Stats</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Nodes:</span>
+            <span className="text-white">33</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Connections:</span>
+            <span className="text-white">53</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Grant Flows:</span>
+            <span className="text-green-400">9</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Service Flows:</span>
+            <span className="text-blue-400">18</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">People Reached:</span>
+            <span className="text-white">200M+</span>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white text-lg">Network Controls</CardTitle>
@@ -147,39 +176,11 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
               Nodes in path: {traversalPath.length}
             </p>
             <p className="text-blue-200 text-xs">
-              Click nodes to build strategic paths and identify disconnects.
+              Click nodes to view details and add them to your strategic path.
             </p>
           </CardContent>
         </Card>
       )}
-
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white text-lg">Network Stats</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Nodes:</span>
-            <span className="text-white">33</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Connections:</span>
-            <span className="text-white">53</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Grant Flows:</span>
-            <span className="text-green-400">9</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Service Flows:</span>
-            <span className="text-blue-400">18</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">People Reached:</span>
-            <span className="text-white">200M+</span>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

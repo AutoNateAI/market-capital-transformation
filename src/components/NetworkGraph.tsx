@@ -1,4 +1,3 @@
-
 import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +45,7 @@ export interface NetworkGraphRef {
   downloadGraph: () => void;
   addDataToNetwork: (data: any) => void;
   updateVisibleLinks: (linkTypes: string[]) => void;
+  updateLinkDistances: (distances: any) => void;
 }
 
 export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
@@ -155,13 +155,18 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     });
 
     const updateVisibleLinks = (linkTypes: string[]) => {
+      console.log("Updating visible links to:", linkTypes);
       setVisibleLinkTypes(linkTypes);
     };
 
     const updateLinkDistances = (distances: any) => {
+      console.log("Updating distances:", distances);
       setLinkDistances(distances);
       if (simulation) {
-        simulation.force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
+        // Get the currently visible links
+        const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
+        
+        simulation.force("link", d3.forceLink(visibleLinks).id((d: any) => d.id).distance(d => {
           return distances[d.type] || 100;
         }));
         simulation.alpha(0.3).restart();
@@ -281,6 +286,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       // Filter links based on visibility
       const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
+      console.log("Visible links count:", visibleLinks.length, "Types:", visibleLinkTypes);
 
       // Update links
       const linkSelection = g.selectAll("line")
@@ -361,16 +367,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         const node = nodeEnter.merge(nodeSelection);
 
         node.on("click", (event, d) => {
-          if (isTraversalMode) {
-            const newPath = [...traversalPath, d];
-            onTraversalPathUpdate(newPath);
-            toast({
-              title: "Node Added to Path",
-              description: `${d.name} added to traversal path (${newPath.length} nodes)`,
-            });
-          } else {
-            onNodeSelect(d);
-          }
+          // Always show the modal first
+          onNodeSelect(d);
         });
 
         newSimulation.on("tick", () => {
@@ -383,10 +381,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           node.attr("transform", (d: Node) => `translate(${d.x},${d.y})`);
         });
       } else {
-        // Just update the link force with new distances
+        // Update the link force with visible links and current distances
         newSimulation.force("link", d3.forceLink(visibleLinks).id((d: any) => d.id).distance(d => {
           return linkDistances[d.type] || 100;
         }));
+        
+        newSimulation.alpha(0.3).restart();
         
         newSimulation.on("tick", () => {
           link

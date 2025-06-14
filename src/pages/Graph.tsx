@@ -85,12 +85,29 @@ const Graph = () => {
       setTraversalPath([]);
       toast({
         title: "Traversal Mode Activated",
-        description: "Click nodes to build strategic paths and identify disconnects.",
+        description: "Click nodes to view details and add them to your strategic path.",
       });
     } else {
       toast({
         title: "Traversal Mode Deactivated",
         description: "Path building mode disabled.",
+      });
+    }
+  };
+
+  const handleAddToPath = (node: any) => {
+    if (!traversalPath.find(n => n.id === node.id)) {
+      const newPath = [...traversalPath, node];
+      setTraversalPath(newPath);
+      toast({
+        title: "Node Added to Path",
+        description: `${node.name} added to traversal path (${newPath.length} nodes)`,
+      });
+    } else {
+      toast({
+        title: "Node Already in Path",
+        description: `${node.name} is already part of your strategic path.`,
+        variant: "destructive",
       });
     }
   };
@@ -121,7 +138,7 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsUploadModalOpen(true)}
-                className="border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
+                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Upload
@@ -130,7 +147,7 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadGraph}
-                className="border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
+                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Graph
@@ -139,8 +156,8 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={toggleTraversalMode}
-                className={`border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white ${
-                  isTraversalMode ? 'bg-blue-600/70 border-blue-500' : ''
+                className={`border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 ${
+                  isTraversalMode ? 'bg-blue-600/70 border-blue-500 text-white' : ''
                 }`}
               >
                 <Route className="w-4 h-4 mr-2" />
@@ -151,7 +168,7 @@ const Graph = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleDownloadPath}
-                  className="border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white"
+                  className="border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white hover:border-green-500"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Path ({traversalPath.length})
@@ -161,7 +178,7 @@ const Graph = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPathModalOpen(true)}
-                className="border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
+                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
               >
                 Path Info
               </Button>
@@ -208,6 +225,8 @@ const Graph = () => {
           node={selectedNode}
           isOpen={!!selectedNode}
           onClose={() => setSelectedNode(null)}
+          isTraversalMode={isTraversalMode}
+          onAddToPath={handleAddToPath}
         />
       )}
 

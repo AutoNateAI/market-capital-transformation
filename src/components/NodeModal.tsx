@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -7,6 +6,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface Node {
   id: string;
@@ -26,10 +27,25 @@ interface NodeModalProps {
   node: Node | null;
   isOpen: boolean;
   onClose: () => void;
+  isTraversalMode?: boolean;
+  onAddToPath?: (node: Node) => void;
 }
 
-export const NodeModal = ({ node, isOpen, onClose }: NodeModalProps) => {
+export const NodeModal = ({ 
+  node, 
+  isOpen, 
+  onClose, 
+  isTraversalMode = false, 
+  onAddToPath 
+}: NodeModalProps) => {
   if (!node) return null;
+
+  const handleAddToPath = () => {
+    if (onAddToPath) {
+      onAddToPath(node);
+      onClose();
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -48,6 +64,20 @@ export const NodeModal = ({ node, isOpen, onClose }: NodeModalProps) => {
         </DialogHeader>
 
         <div className="space-y-4">
+          {isTraversalMode && (
+            <Card className="bg-blue-900/30 border-blue-600">
+              <CardContent className="pt-4">
+                <Button
+                  onClick={handleAddToPath}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add to Strategic Path
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {node.description && (
             <Card className="bg-slate-700/50 border-slate-600">
               <CardHeader>
