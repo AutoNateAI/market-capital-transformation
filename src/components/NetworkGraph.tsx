@@ -65,39 +65,39 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     
     const [networkData, setNetworkData] = useState<NetworkData>({
       nodes: [
-        { id: "root", name: "Community Distribution Network", type: "root", color: "#FFFFFF", size: 15 },
-        { id: "gov", name: "Government Sector", type: "sector", color: "#FF6B6B", size: 12, description: "Policy makers and public service providers", funding: "$50B+", population: "328M citizens" },
-        { id: "edu", name: "Higher Education", type: "sector", color: "#4ECDC4", size: 12, description: "Universities, colleges, and research institutions", funding: "$70B+", population: "20M students" },
-        { id: "biz", name: "Business Sector", type: "sector", color: "#45B7D1", size: 12, description: "Private companies and corporate entities", funding: "$25B+ CSR", population: "160M employees" },
-        { id: "fed", name: "Federal Agencies", type: "subsector", color: "#FF8A8A", size: 10 },
-        { id: "state", name: "State & Local", type: "subsector", color: "#FF8A8A", size: 10 },
-        { id: "research", name: "Research Universities", type: "subsector", color: "#6ED7D3", size: 10 },
-        { id: "community", name: "Community Colleges", type: "subsector", color: "#6ED7D3", size: 10 },
-        { id: "corp", name: "Large Corporations", type: "subsector", color: "#69C3E7", size: 10 },
-        { id: "sme", name: "Small-Medium Enterprises", type: "subsector", color: "#69C3E7", size: 10 },
-        { id: "hhs", name: "Health & Human Services", type: "organization", color: "#96CEB4", size: 8, grants: ["Community Health: $2.1B", "Mental Health: $1.8B"], channels: 4 },
-        { id: "doe", name: "Department of Education", type: "organization", color: "#96CEB4", size: 8, grants: ["Title I: $18.4B", "STEM: $3.2B"], channels: 3 },
-        { id: "sba", name: "Small Business Admin", type: "organization", color: "#96CEB4", size: 8, grants: ["Small Business: $500M", "Innovation: $300M"], channels: 5 },
-        { id: "nsf", name: "National Science Foundation", type: "organization", color: "#96CEB4", size: 8, grants: ["Research Grants: $8.5B"], channels: 3 },
-        { id: "nih", name: "National Institutes of Health", type: "organization", color: "#96CEB4", size: 8, grants: ["Medical Research: $42B"], channels: 4 },
-        { id: "tech-corps", name: "Tech Companies", type: "organization", color: "#96CEB4", size: 8, grants: ["Digital Equity: $2.5B", "STEM Ed: $1.2B"], channels: 6 },
-        { id: "health-corps", name: "Healthcare Companies", type: "organization", color: "#96CEB4", size: 8, grants: ["Health Equity: $1.8B"], channels: 3 },
-        { id: "health-centers", name: "Community Health Centers", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "schools", name: "Educational Institutions", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "libraries", name: "Public Libraries", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "community-centers", name: "Community Centers", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "extension", name: "Extension Programs", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "online", name: "Digital Platforms", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "mobile-units", name: "Mobile Services", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "nonprofits", name: "Nonprofit Partners", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "workforce", name: "Workforce Centers", type: "distribution", color: "#FFEAA7", size: 6 },
-        { id: "rural", name: "Rural Communities", type: "community", color: "#DDA0DD", size: 5, population: "60M", needs: ["Healthcare", "Broadband", "Economic Development"] },
-        { id: "urban", name: "Urban Communities", type: "community", color: "#DDA0DD", size: 5, population: "80M", needs: ["Housing", "Education", "Healthcare"] },
-        { id: "seniors", name: "Senior Citizens", type: "community", color: "#DDA0DD", size: 5, population: "54M", needs: ["Healthcare", "Technology", "Social Services"] },
-        { id: "students", name: "Students", type: "community", color: "#DDA0DD", size: 5, population: "76M", needs: ["Education", "Financial Aid", "Career Prep"] },
-        { id: "entrepreneurs", name: "Entrepreneurs", type: "community", color: "#DDA0DD", size: 5, population: "2M", needs: ["Funding", "Mentorship", "Market Access"] },
-        { id: "chronic-patients", name: "Chronic Disease Patients", type: "community", color: "#DDA0DD", size: 5, population: "133M", needs: ["Care Coordination", "Medication", "Support"] },
-        { id: "underserved", name: "Underserved Populations", type: "community", color: "#DDA0DD", size: 5, population: "50M", needs: ["Access to Services", "Equity", "Representation"] }
+        { id: "root", name: "Community Distribution Network", type: "root", color: "#FFFFFF", size: 20 },
+        { id: "gov", name: "Government Sector", type: "sector", color: "#FF6B6B", size: 16, description: "Policy makers and public service providers", funding: "$50B+", population: "328M citizens" },
+        { id: "edu", name: "Higher Education", type: "sector", color: "#4ECDC4", size: 16, description: "Universities, colleges, and research institutions", funding: "$70B+", population: "20M students" },
+        { id: "biz", name: "Business Sector", type: "sector", color: "#45B7D1", size: 16, description: "Private companies and corporate entities", funding: "$25B+ CSR", population: "160M employees" },
+        { id: "fed", name: "Federal Agencies", type: "subsector", color: "#FF8A8A", size: 14 },
+        { id: "state", name: "State & Local", type: "subsector", color: "#FF8A8A", size: 14 },
+        { id: "research", name: "Research Universities", type: "subsector", color: "#6ED7D3", size: 14 },
+        { id: "community", name: "Community Colleges", type: "subsector", color: "#6ED7D3", size: 14 },
+        { id: "corp", name: "Large Corporations", type: "subsector", color: "#69C3E7", size: 14 },
+        { id: "sme", name: "Small-Medium Enterprises", type: "subsector", color: "#69C3E7", size: 14 },
+        { id: "hhs", name: "Health & Human Services", type: "organization", color: "#96CEB4", size: 12, grants: ["Community Health: $2.1B", "Mental Health: $1.8B"], channels: 4 },
+        { id: "doe", name: "Department of Education", type: "organization", color: "#96CEB4", size: 12, grants: ["Title I: $18.4B", "STEM: $3.2B"], channels: 3 },
+        { id: "sba", name: "Small Business Admin", type: "organization", color: "#96CEB4", size: 12, grants: ["Small Business: $500M", "Innovation: $300M"], channels: 5 },
+        { id: "nsf", name: "National Science Foundation", type: "organization", color: "#96CEB4", size: 12, grants: ["Research Grants: $8.5B"], channels: 3 },
+        { id: "nih", name: "National Institutes of Health", type: "organization", color: "#96CEB4", size: 12, grants: ["Medical Research: $42B"], channels: 4 },
+        { id: "tech-corps", name: "Tech Companies", type: "organization", color: "#96CEB4", size: 12, grants: ["Digital Equity: $2.5B", "STEM Ed: $1.2B"], channels: 6 },
+        { id: "health-corps", name: "Healthcare Companies", type: "organization", color: "#96CEB4", size: 12, grants: ["Health Equity: $1.8B"], channels: 3 },
+        { id: "health-centers", name: "Community Health Centers", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "schools", name: "Educational Institutions", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "libraries", name: "Public Libraries", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "community-centers", name: "Community Centers", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "extension", name: "Extension Programs", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "online", name: "Digital Platforms", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "mobile-units", name: "Mobile Services", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "nonprofits", name: "Nonprofit Partners", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "workforce", name: "Workforce Centers", type: "distribution", color: "#FFEAA7", size: 10 },
+        { id: "rural", name: "Rural Communities", type: "community", color: "#DDA0DD", size: 8, population: "60M", needs: ["Healthcare", "Broadband", "Economic Development"] },
+        { id: "urban", name: "Urban Communities", type: "community", color: "#DDA0DD", size: 8, population: "80M", needs: ["Housing", "Education", "Healthcare"] },
+        { id: "seniors", name: "Senior Citizens", type: "community", color: "#DDA0DD", size: 8, population: "54M", needs: ["Healthcare", "Technology", "Social Services"] },
+        { id: "students", name: "Students", type: "community", color: "#DDA0DD", size: 8, population: "76M", needs: ["Education", "Financial Aid", "Career Prep"] },
+        { id: "entrepreneurs", name: "Entrepreneurs", type: "community", color: "#DDA0DD", size: 8, population: "2M", needs: ["Funding", "Mentorship", "Market Access"] },
+        { id: "chronic-patients", name: "Chronic Disease Patients", type: "community", color: "#DDA0DD", size: 8, population: "133M", needs: ["Care Coordination", "Medication", "Support"] },
+        { id: "underserved", name: "Underserved Populations", type: "community", color: "#DDA0DD", size: 8, population: "50M", needs: ["Access to Services", "Equity", "Representation"] }
       ],
       links: [
         { source: "root", target: "gov", type: "structure" },
@@ -217,9 +217,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       const centerX = dimensions.width / 2;
       const centerY = dimensions.height / 2;
       
-      // Scale distances based on screen size
-      const baseDistance = Math.min(dimensions.width, dimensions.height) * 0.15;
-      const sectorDistance = Math.min(dimensions.width, dimensions.height) * 0.25;
+      // Scale distances based on screen size for hierarchical layout
+      const baseDistance = Math.min(dimensions.width, dimensions.height) * 0.12;
+      const sectorDistance = Math.min(dimensions.width, dimensions.height) * 0.20;
+      const organizationDistance = Math.min(dimensions.width, dimensions.height) * 0.28;
+      const distributionDistance = Math.min(dimensions.width, dimensions.height) * 0.36;
+      const communityDistance = Math.min(dimensions.width, dimensions.height) * 0.44;
       
       const sectorAngles = {
         'gov': -Math.PI / 2,
@@ -252,6 +255,30 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             node.x = centerX + Math.cos(angle + offset) * sectorDistance;
             node.y = centerY + Math.sin(angle + offset) * sectorDistance;
           }
+        } else if (node.type === 'organization') {
+          // Position organizations in their sector's area at organization distance
+          const sectorMap = {
+            'hhs': 'gov', 'doe': 'gov', 'sba': 'gov',
+            'nsf': 'edu', 'nih': 'edu',
+            'tech-corps': 'biz', 'health-corps': 'biz'
+          };
+          const parentSector = sectorMap[node.id as keyof typeof sectorMap];
+          if (parentSector) {
+            const angle = sectorAngles[parentSector as keyof typeof sectorAngles];
+            const angleOffset = (Math.random() - 0.5) * 0.8; // Random spread within sector
+            node.x = centerX + Math.cos(angle + angleOffset) * organizationDistance;
+            node.y = centerY + Math.sin(angle + angleOffset) * organizationDistance;
+          }
+        } else if (node.type === 'distribution') {
+          // Position distribution nodes closer to center
+          const angle = Math.random() * 2 * Math.PI;
+          node.x = centerX + Math.cos(angle) * distributionDistance;
+          node.y = centerY + Math.sin(angle) * distributionDistance;
+        } else if (node.type === 'community') {
+          // Position communities on the outermost ring for strategic analysis
+          const angle = Math.random() * 2 * Math.PI;
+          node.x = centerX + Math.cos(angle) * communityDistance;
+          node.y = centerY + Math.sin(angle) * communityDistance;
         }
       });
     };
@@ -288,31 +315,35 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       const newSimulation = simulation || d3.forceSimulation(networkData.nodes)
         .force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
           const scaledDistance = (linkDistances[d.type] || 100) * forceStrength;
-          return Math.max(scaledDistance, 30); // Minimum distance
+          return Math.max(scaledDistance, 30);
         }))
         .force("charge", d3.forceManyBody().strength(d => {
           const baseStrength = forceStrength * -200;
           switch(d.type) {
-            case 'root': return baseStrength * 4;
-            case 'sector': return baseStrength * 3;
-            case 'subsector': return baseStrength * 2;
-            case 'organization': return baseStrength * 1.5;
-            case 'distribution': return baseStrength * 1.25;
-            case 'community': return baseStrength;
+            case 'root': return baseStrength * 6;
+            case 'sector': return baseStrength * 4;
+            case 'subsector': return baseStrength * 3;
+            case 'organization': return baseStrength * 2;
+            case 'distribution': return baseStrength * 1.5;
+            case 'community': return baseStrength * 0.8;
             default: return baseStrength;
           }
         }))
         .force("center", d3.forceCenter(dimensions.width / 2, dimensions.height / 2))
         .force("collision", d3.forceCollide().radius(d => {
-          const scaledSize = d.size * forceStrength + 5;
-          return Math.max(scaledSize, 10);
+          const scaledSize = d.size * forceStrength + 8;
+          return Math.max(scaledSize, 12);
         }));
 
-      const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
-      console.log("Visible links count:", visibleLinks.length, "Types:", visibleLinkTypes);
+      // Always include structure links to maintain consistent hierarchy
+      const structureLinks = networkData.links.filter(link => link.type === 'structure');
+      const otherVisibleLinks = networkData.links.filter(link => link.type !== 'structure' && visibleLinkTypes.includes(link.type));
+      const allVisibleLinks = [...structureLinks, ...otherVisibleLinks];
+      
+      console.log("Visible links count:", allVisibleLinks.length, "Types:", [...new Set(allVisibleLinks.map(l => l.type))]);
 
       const linkSelection = g.selectAll("line")
-        .data(visibleLinks, (d: any) => `${d.source.id || d.source}-${d.target.id || d.target}`);
+        .data(allVisibleLinks, (d: any) => `${d.source.id || d.source}-${d.target.id || d.target}`);
 
       linkSelection.exit().remove();
 
@@ -327,8 +358,11 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             default: return "#666";
           }
         })
-        .attr("stroke-opacity", 0.6)
-        .attr("stroke-width", Math.max(2 * forceStrength, 1))
+        .attr("stroke-opacity", d => d.type === 'structure' ? 0.4 : 0.7)
+        .attr("stroke-width", d => {
+          const baseWidth = Math.max(2 * forceStrength, 1);
+          return d.type === 'structure' ? baseWidth : baseWidth * 1.5;
+        })
         .attr("stroke-dasharray", d => d.type === 'structure' ? "0" : "5,5")
         .style("animation", d => d.type !== 'structure' ? "flow 2s linear infinite" : "none");
 
@@ -372,7 +406,19 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             }));
 
         nodeEnter.append("circle")
-          .attr("r", (d: Node) => Math.max(d.size * forceStrength, 8))
+          .attr("r", (d: Node) => {
+            const baseSize = Math.max(d.size * forceStrength, 8);
+            // Ensure size hierarchy is maintained
+            switch(d.type) {
+              case 'root': return Math.max(baseSize, 16);
+              case 'sector': return Math.max(baseSize, 14);
+              case 'subsector': return Math.max(baseSize, 12);
+              case 'organization': return Math.max(baseSize, 10);
+              case 'distribution': return Math.max(baseSize, 8);
+              case 'community': return Math.max(baseSize, 6);
+              default: return baseSize;
+            }
+          })
           .attr("fill", (d: Node) => d.color)
           .attr("stroke", (d: Node) => d.color)
           .attr("stroke-width", Math.max(2 * forceStrength, 1));
@@ -382,7 +428,16 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             const maxLength = dimensions.width < 768 ? 12 : 20;
             return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + "..." : d.name;
           })
-          .attr("dy", (d: Node) => Math.max(d.size * forceStrength, 8) + 15)
+          .attr("dy", (d: Node) => {
+            const radius = Math.max(d.size * forceStrength, 8);
+            const sizeAdjustedRadius = d.type === 'root' ? Math.max(radius, 16) :
+                                    d.type === 'sector' ? Math.max(radius, 14) :
+                                    d.type === 'subsector' ? Math.max(radius, 12) :
+                                    d.type === 'organization' ? Math.max(radius, 10) :
+                                    d.type === 'distribution' ? Math.max(radius, 8) :
+                                    Math.max(radius, 6);
+            return sizeAdjustedRadius + 15;
+          })
           .attr("text-anchor", "middle")
           .style("font-size", `${Math.max(10 * forceStrength, 8)}px`)
           .style("fill", "white");
@@ -403,7 +458,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           node.attr("transform", (d: Node) => `translate(${d.x},${d.y})`);
         });
       } else {
-        newSimulation.force("link", d3.forceLink(visibleLinks).id((d: any) => d.id).distance(d => {
+        newSimulation.force("link", d3.forceLink(allVisibleLinks).id((d: any) => d.id).distance(d => {
           const scaledDistance = (linkDistances[d.type] || 100) * forceStrength;
           return Math.max(scaledDistance, 30);
         }));

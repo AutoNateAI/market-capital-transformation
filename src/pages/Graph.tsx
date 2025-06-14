@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { GraphLegend } from "@/components/GraphLegend";
 
 const Graph = () => {
   const navigate = useNavigate();
@@ -29,6 +29,7 @@ const Graph = () => {
   const [isControlsOpen, setIsControlsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const networkRef = useRef(null);
+  const [isLegendVisible, setIsLegendVisible] = useState(true);
 
   const handleLogout = () => {
     toast({
@@ -141,6 +142,16 @@ const Graph = () => {
             </div>
             
             <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsLegendVisible(!isLegendVisible)}
+                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 px-2 md:px-3"
+              >
+                <Network className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Legend</span>
+              </Button>
+              
               <Button
                 variant="outline"
                 size="sm"
@@ -275,6 +286,9 @@ const Graph = () => {
           </div>
         </div>
       </div>
+
+      {/* Draggable Legend */}
+      <GraphLegend isVisible={isLegendVisible} />
 
       {/* Modals */}
       {selectedNode && (
