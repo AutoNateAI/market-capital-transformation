@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +7,22 @@ import { GraphControls } from "@/components/GraphControls";
 import { NodeModal } from "@/components/NodeModal";
 import { UploadModal } from "@/components/UploadModal";
 import { PathTraversalModal } from "@/components/PathTraversalModal";
-import { LogOut, Network, Brain, Download, Upload, Route } from "lucide-react";
+import { LogOut, Network, Brain, Download, Upload, Route, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarInset,
+} from "@/components/ui/sidebar";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const Graph = () => {
   const navigate = useNavigate();
@@ -19,6 +32,7 @@ const Graph = () => {
   const [isPathModalOpen, setIsPathModalOpen] = useState(false);
   const [isTraversalMode, setIsTraversalMode] = useState(false);
   const [traversalPath, setTraversalPath] = useState([]);
+  const [isMobileControlsOpen, setIsMobileControlsOpen] = useState(false);
   const networkRef = useRef(null);
 
   const handleLogout = () => {
@@ -114,110 +128,202 @@ const Graph = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-      {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Network className="w-6 h-6 text-white" />
+      <SidebarProvider>
+        {/* Header */}
+        <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2 md:space-x-4">
+                {/* Mobile sidebar trigger */}
+                <div className="md:hidden">
+                  <SidebarTrigger className="text-white hover:bg-slate-700/50" />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Strategic Network Graph</h1>
-                  <div className="flex items-center text-sm text-blue-300">
-                    <Brain className="w-3 h-3 mr-1" />
-                    <span>AutoNateAI Strategic Intelligence</span>
+                
+                <div className="flex items-center space-x-2 md:space-x-3">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <Network className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg md:text-xl font-bold text-white">Strategic Network Graph</h1>
+                    <div className="hidden md:flex items-center text-sm text-blue-300">
+                      <Brain className="w-3 h-3 mr-1" />
+                      <span>AutoNateAI Strategic Intelligence</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsUploadModalOpen(true)}
-                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadGraph}
-                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Graph
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTraversalMode}
-                className={`border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 ${
-                  isTraversalMode ? 'bg-blue-600/70 border-blue-500 text-white' : ''
-                }`}
-              >
-                <Route className="w-4 h-4 mr-2" />
-                {isTraversalMode ? 'Exit Path' : 'Path Mode'}
-              </Button>
-              {traversalPath.length > 0 && (
+              
+              <div className="flex items-center space-x-1 md:space-x-3">
+                {/* Desktop buttons */}
+                <div className="hidden md:flex items-center space-x-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadGraph}
+                    className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Graph
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleTraversalMode}
+                    className={`border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 ${
+                      isTraversalMode ? 'bg-blue-600/70 border-blue-500 text-white' : ''
+                    }`}
+                  >
+                    <Route className="w-4 h-4 mr-2" />
+                    {isTraversalMode ? 'Exit Path' : 'Path Mode'}
+                  </Button>
+                  {traversalPath.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadPath}
+                      className="border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white hover:border-green-500"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Path ({traversalPath.length})
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsPathModalOpen(true)}
+                    className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                  >
+                    Path Info
+                  </Button>
+                </div>
+
+                {/* Mobile action buttons */}
+                <div className="md:hidden flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleTraversalMode}
+                    className={`border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 px-2 ${
+                      isTraversalMode ? 'bg-blue-600/70 border-blue-500 text-white' : ''
+                    }`}
+                  >
+                    <Route className="w-4 h-4" />
+                  </Button>
+                  
+                  <Drawer>
+                    <DrawerTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 px-2"
+                      >
+                        <Menu className="w-4 h-4" />
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent className="bg-slate-800 border-slate-700">
+                      <DrawerHeader>
+                        <DrawerTitle className="text-white">Actions</DrawerTitle>
+                      </DrawerHeader>
+                      <div className="p-4 space-y-2">
+                        <Button
+                          variant="outline"
+                          className="w-full border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white justify-start"
+                          onClick={() => setIsUploadModalOpen(true)}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Data
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white justify-start"
+                          onClick={handleDownloadGraph}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download Graph
+                        </Button>
+                        {traversalPath.length > 0 && (
+                          <Button
+                            variant="outline"
+                            className="w-full border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white justify-start"
+                            onClick={handleDownloadPath}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Path ({traversalPath.length})
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          className="w-full border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white justify-start"
+                          onClick={() => setIsPathModalOpen(true)}
+                        >
+                          Path Info
+                        </Button>
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                </div>
+
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  onClick={handleDownloadPath}
-                  className="border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white hover:border-green-500"
+                  onClick={handleLogout}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20 bg-slate-700/30 px-2 md:px-4"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Path ({traversalPath.length})
+                  <LogOut className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Logout</span>
                 </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsPathModalOpen(true)}
-                className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500"
-              >
-                Path Info
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-red-400 hover:text-red-300 hover:bg-red-900/20 bg-slate-700/30"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <div className="flex h-[calc(100vh-80px)]">
-        {/* Controls Sidebar */}
-        <div className="w-80 border-r border-slate-700 bg-slate-800/30 backdrop-blur-sm overflow-y-auto">
-          <GraphControls 
-            networkRef={networkRef}
-            isTraversalMode={isTraversalMode}
-            traversalPath={traversalPath}
-          />
-        </div>
+        {/* Main Content */}
+        <div className="pt-16 md:pt-20 h-screen">
+          {/* Desktop Sidebar */}
+          <Sidebar className="hidden md:flex border-slate-700 bg-slate-800/30 backdrop-blur-sm">
+            <SidebarContent className="overflow-y-auto">
+              <GraphControls 
+                networkRef={networkRef}
+                isTraversalMode={isTraversalMode}
+                traversalPath={traversalPath}
+              />
+            </SidebarContent>
+          </Sidebar>
 
-        {/* Graph Visualization */}
-        <div className="flex-1 relative">
-          <NetworkGraph
-            ref={networkRef}
-            onNodeSelect={setSelectedNode}
-            isTraversalMode={isTraversalMode}
-            traversalPath={traversalPath}
-            onTraversalPathUpdate={setTraversalPath}
-          />
+          {/* Mobile Sidebar */}
+          <Sidebar className="md:hidden border-slate-700 bg-slate-800/95 backdrop-blur-sm">
+            <SidebarContent className="overflow-y-auto">
+              <GraphControls 
+                networkRef={networkRef}
+                isTraversalMode={isTraversalMode}
+                traversalPath={traversalPath}
+              />
+            </SidebarContent>
+          </Sidebar>
+
+          <SidebarInset>
+            {/* Graph Visualization */}
+            <div className="h-full relative">
+              <NetworkGraph
+                ref={networkRef}
+                onNodeSelect={setSelectedNode}
+                isTraversalMode={isTraversalMode}
+                traversalPath={traversalPath}
+                onTraversalPathUpdate={setTraversalPath}
+              />
+            </div>
+          </SidebarInset>
         </div>
-      </div>
+      </SidebarProvider>
 
       {/* Modals */}
       {selectedNode && (
