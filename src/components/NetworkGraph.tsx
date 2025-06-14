@@ -78,6 +78,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     const [isResizingModal, setIsResizingModal] = useState(false);
     const [modalDragOffset, setModalDragOffset] = useState({ x: 0, y: 0 });
     const [modalResizeStart, setModalResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    const [isModalHovered, setIsModalHovered] = useState(false);
 
     // Interaction mode and transform state
     const [interactionMode, setInteractionMode] = useState<'pan-zoom' | 'rotate'>('pan-zoom');
@@ -198,6 +199,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     };
 
     const handleModalMouseDown = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (!controlModalRef.current) return;
       
       const rect = controlModalRef.current.getBoundingClientRect();
@@ -209,6 +212,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     };
 
     const handleModalTouchStart = (e: React.TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (!controlModalRef.current || e.touches.length !== 1) return;
       
       const rect = controlModalRef.current.getBoundingClientRect();
@@ -221,6 +226,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     };
 
     const handleModalResizeStart = (e: React.MouseEvent) => {
+      e.preventDefault();
       e.stopPropagation();
       setModalResizeStart({
         x: e.clientX,
@@ -232,6 +238,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     };
 
     const handleModalResizeTouchStart = (e: React.TouchEvent) => {
+      e.preventDefault();
       e.stopPropagation();
       if (e.touches.length !== 1) return;
       
@@ -251,6 +258,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         const coords = getEventCoordinates(e);
         
         if (isDraggingModal) {
+          e.preventDefault();
           const newX = coords.x - modalDragOffset.x;
           const newY = coords.y - modalDragOffset.y;
           
@@ -262,6 +270,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             y: Math.max(0, Math.min(newY, maxY))
           });
         } else if (isResizingModal) {
+          e.preventDefault();
           const deltaX = coords.x - modalResizeStart.x;
           const deltaY = coords.y - modalResizeStart.y;
           
@@ -278,7 +287,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       };
 
       if (isDraggingModal || isResizingModal) {
-        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mousemove', handleMove, { passive: false });
         document.addEventListener('mouseup', handleEnd);
         document.addEventListener('touchmove', handleMove, { passive: false });
         document.addEventListener('touchend', handleEnd);
@@ -313,6 +322,9 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     // Mouse and touch controls for rotation and panning
     useEffect(() => {
       const handleStart = (clientX: number, clientY: number, button: number = 0) => {
+        // Don't start graph interaction if modal is hovered
+        if (isModalHovered || isDraggingModal || isResizingModal) return;
+        
         setMouseState({
           isDown: true,
           lastX: clientX,
@@ -322,7 +334,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       };
 
       const handleMove = (clientX: number, clientY: number) => {
-        if (!mouseState.isDown) return;
+        if (!mouseState.isDown || isModalHovered || isDraggingModal || isResizingModal) return;
         
         const deltaX = clientX - mouseState.lastX;
         const deltaY = clientY - mouseState.lastY;
@@ -385,8 +397,13 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         handleEnd();
       };
 
-      // Wheel/pinch for zoom (only in pan-zoom mode)
+      // Wheel/pinch for zoom (only in pan-zoom mode and not over modal)
       const handleWheel = (e: WheelEvent) => {
+        // Prevent graph zoom if over modal
+        if (isModalHovered || controlModalRef.current?.contains(e.target as Element)) {
+          return; // Let the modal handle its own scrolling
+        }
+        
         if (interactionMode !== 'pan-zoom') return;
         e.preventDefault();
         
@@ -423,7 +440,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           container.removeEventListener('touchend', handleTouchEnd);
         };
       }
-    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button, interactionMode, showControlModal]);
+    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button, interactionMode, showControlModal, isModalHovered, isDraggingModal, isResizingModal]);
 
     // Reset transform function
     const resetView = () => {
@@ -773,14 +790,14 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <Button
             onClick={() => setShowControlModal(!showControlModal)}
-            className="px-3 py-1 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="px-3 py-1 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors touch-manipulation"
           >
             <Settings className="w-4 h-4 mr-1" />
             Controls
           </Button>
           <Button
             onClick={resetView}
-            className="px-3 py-1 rounded text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"
+            className="px-3 py-1 rounded text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors touch-manipulation"
           >
             Reset View
           </Button>
@@ -790,19 +807,27 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         {showControlModal && (
           <div
             ref={controlModalRef}
-            className="fixed z-50 select-none touch-none"
+            className="fixed select-none touch-none"
             style={{
               left: `${controlModalPosition.x}px`,
               top: `${controlModalPosition.y}px`,
               width: `${controlModalSize.width}px`,
               height: `${controlModalSize.height}px`,
+              zIndex: 9999, // Ensure it's above everything
               transform: isDraggingModal || isResizingModal ? 'scale(1.02)' : 'scale(1)',
               transition: isDraggingModal || isResizingModal ? 'none' : 'transform 0.2s ease'
             }}
+            onMouseEnter={() => setIsModalHovered(true)}
+            onMouseLeave={() => setIsModalHovered(false)}
+            onTouchStart={(e) => {
+              setIsModalHovered(true);
+              e.stopPropagation();
+            }}
+            onTouchEnd={() => setIsModalHovered(false)}
           >
-            <Card className="bg-slate-800/95 border-slate-600 backdrop-blur-sm shadow-2xl h-full flex flex-col">
+            <Card className="bg-slate-800/98 border-slate-600 backdrop-blur-sm shadow-2xl h-full flex flex-col">
               <CardHeader 
-                className="pb-2 cursor-move flex-shrink-0"
+                className="pb-2 cursor-move flex-shrink-0 touch-manipulation"
                 onMouseDown={handleModalMouseDown}
                 onTouchStart={handleModalTouchStart}
               >
@@ -815,13 +840,13 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowControlModal(false)}
-                    className="text-slate-400 hover:text-white p-1 h-auto"
+                    className="text-slate-400 hover:text-white p-1 h-auto touch-manipulation"
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 flex-1 overflow-y-auto">
+              <CardContent className="space-y-4 flex-1 overflow-y-auto overscroll-contain">
                 {/* Interaction Mode */}
                 <div>
                   <h4 className="text-white font-medium mb-3">Interaction Mode</h4>
@@ -829,15 +854,18 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                     <Button
                       variant={interactionMode === 'pan-zoom' ? "default" : "outline"}
                       onClick={() => setInteractionMode('pan-zoom')}
-                      className="w-full justify-start text-sm py-2"
+                      className="w-full justify-start text-sm py-2 touch-manipulation"
                     >
-                      <Move className="w-4 h-4 mr-2" />
-                      Pan & Zoom Mode
+                      <div className="flex items-center">
+                        <Move className="w-4 h-4 mr-2" />
+                        <ZoomIn className="w-4 h-4 mr-2" />
+                        Pan & Zoom Mode
+                      </div>
                     </Button>
                     <Button
                       variant={interactionMode === 'rotate' ? "default" : "outline"}
                       onClick={() => setInteractionMode('rotate')}
-                      className="w-full justify-start text-sm py-2"
+                      className="w-full justify-start text-sm py-2 touch-manipulation"
                     >
                       <RotateCw className="w-4 h-4 mr-2" />
                       Rotate Mode
