@@ -104,28 +104,28 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
             <Button 
               variant="outline" 
               onClick={showAllConnections}
-              className="w-full border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white text-xs md:text-sm py-2 md:py-2.5"
+              className="w-full border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 text-xs md:text-sm py-2 md:py-2.5 justify-start"
             >
               Show All Connections
             </Button>
             <Button 
               variant="outline" 
               onClick={showGrantFlowOnly}
-              className="w-full border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white text-xs md:text-sm py-2 md:py-2.5"
+              className="w-full border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white hover:border-green-500 text-xs md:text-sm py-2 md:py-2.5 justify-start"
             >
               Grant Flow Only
             </Button>
             <Button 
               variant="outline" 
               onClick={showServiceFlowOnly}
-              className="w-full border-blue-600 text-blue-400 bg-slate-700/50 hover:bg-blue-600 hover:text-white text-xs md:text-sm py-2 md:py-2.5"
+              className="w-full border-blue-600 text-blue-400 bg-slate-700/50 hover:bg-blue-600 hover:text-white hover:border-blue-500 text-xs md:text-sm py-2 md:py-2.5 justify-start"
             >
               Service Flow Only
             </Button>
             <Button 
               variant="outline" 
               onClick={showKnowledgeFlowOnly}
-              className="w-full border-orange-600 text-orange-400 bg-slate-700/50 hover:bg-orange-600 hover:text-white text-xs md:text-sm py-2 md:py-2.5"
+              className="w-full border-orange-600 text-orange-400 bg-slate-700/50 hover:bg-orange-600 hover:text-white hover:border-orange-500 text-xs md:text-sm py-2 md:py-2.5 justify-start"
             >
               Knowledge Flow Only
             </Button>
@@ -159,7 +159,7 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
           <Button 
             onClick={resetDistances}
             variant="outline" 
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white text-xs md:text-sm py-2 md:py-2.5"
+            className="w-full border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-700 hover:text-white hover:border-slate-500 text-xs md:text-sm py-2 md:py-2.5 justify-start"
           >
             Reset Distances
           </Button>
