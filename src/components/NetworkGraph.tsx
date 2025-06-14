@@ -50,8 +50,10 @@ export interface NetworkGraphRef {
 
 export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
   ({ onNodeSelect, isTraversalMode, traversalPath, onTraversalPathUpdate }, ref) => {
+    const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
     const { toast } = useToast();
+    const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
     const [simulation, setSimulation] = useState<d3.Simulation<Node, Link> | null>(null);
     const [visibleLinkTypes, setVisibleLinkTypes] = useState<string[]>(['structure', 'grant-flow', 'service-flow', 'knowledge-flow']);
     const [linkDistances, setLinkDistances] = useState({
@@ -154,6 +156,24 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       ]
     });
 
+    // Responsive dimensions calculation
+    useEffect(() => {
+      const updateDimensions = () => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          const newWidth = rect.width;
+          const newHeight = rect.height;
+          
+          setDimensions({ width: newWidth, height: newHeight });
+        }
+      };
+
+      updateDimensions();
+      window.addEventListener('resize', updateDimensions);
+      
+      return () => window.removeEventListener('resize', updateDimensions);
+    }, []);
+
     const updateVisibleLinks = (linkTypes: string[]) => {
       console.log("Updating visible links to:", linkTypes);
       setVisibleLinkTypes(linkTypes);
@@ -163,11 +183,11 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       console.log("Updating distances:", distances);
       setLinkDistances(distances);
       if (simulation) {
-        // Get the currently visible links
         const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
         
         simulation.force("link", d3.forceLink(visibleLinks).id((d: any) => d.id).distance(d => {
-          return distances[d.type] || 100;
+          const scaledDistance = (distances[d.type] || 100) * Math.min(dimensions.width, dimensions.height) / 1000;
+          return Math.max(scaledDistance, 30); // Minimum distance
         }));
         simulation.alpha(0.3).restart();
       }
@@ -194,14 +214,17 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     }));
 
     const initializeRadialPositions = () => {
-      const centerX = 400;
-      const centerY = 300;
+      const centerX = dimensions.width / 2;
+      const centerY = dimensions.height / 2;
       
-      // Define sector angles for perfect 120-degree separation
+      // Scale distances based on screen size
+      const baseDistance = Math.min(dimensions.width, dimensions.height) * 0.15;
+      const sectorDistance = Math.min(dimensions.width, dimensions.height) * 0.25;
+      
       const sectorAngles = {
-        'gov': -Math.PI / 2, // Top (270 degrees)
-        'edu': -Math.PI / 2 + (2 * Math.PI / 3), // Bottom left (30 degrees)
-        'biz': -Math.PI / 2 + (4 * Math.PI / 3) // Bottom right (150 degrees)
+        'gov': -Math.PI / 2,
+        'edu': -Math.PI / 2 + (2 * Math.PI / 3),
+        'biz': -Math.PI / 2 + (4 * Math.PI / 3)
       };
 
       networkData.nodes.forEach(node => {
@@ -213,13 +236,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         } else if (node.type === 'sector') {
           const angle = sectorAngles[node.id as keyof typeof sectorAngles];
           if (angle !== undefined) {
-            node.x = centerX + Math.cos(angle) * 120;
-            node.y = centerY + Math.sin(angle) * 120;
+            node.x = centerX + Math.cos(angle) * baseDistance;
+            node.y = centerY + Math.sin(angle) * baseDistance;
             node.fx = node.x;
             node.fy = node.y;
           }
         } else if (node.type === 'subsector') {
-          // Position subsectors extending from their parent sectors
           const parentSector = node.id.startsWith('fed') || node.id.startsWith('state') ? 'gov' :
                               node.id.startsWith('research') || node.id.startsWith('community') ? 'edu' :
                               node.id.startsWith('corp') || node.id.startsWith('sme') ? 'biz' : null;
@@ -227,29 +249,24 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           if (parentSector) {
             const angle = sectorAngles[parentSector as keyof typeof sectorAngles];
             const offset = node.id.includes('fed') || node.id.includes('research') || node.id.includes('corp') ? -0.3 : 0.3;
-            node.x = centerX + Math.cos(angle + offset) * 200;
-            node.y = centerY + Math.sin(angle + offset) * 200;
+            node.x = centerX + Math.cos(angle + offset) * sectorDistance;
+            node.y = centerY + Math.sin(angle + offset) * sectorDistance;
           }
         }
       });
     };
 
     useEffect(() => {
-      if (!svgRef.current) return;
+      if (!svgRef.current || dimensions.width === 0 || dimensions.height === 0) return;
 
-      const width = 800;
-      const height = 600;
-      
       const svg = d3.select(svgRef.current);
       
-      // Only clear if this is initial render or data change, not filter change
       if (!simulation) {
         svg.selectAll("*").remove();
       }
       
       const g = svg.select("g").empty() ? svg.append("g") : svg.select("g");
 
-      // Add zoom behavior only if not already added
       if (!svg.property("__zoom_added__")) {
         const zoom = d3.zoom()
           .scaleExtent([0.1, 3])
@@ -261,34 +278,39 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         svg.property("__zoom_added__", true);
       }
 
-      // Initialize radial positions only if simulation doesn't exist
       if (!simulation) {
         initializeRadialPositions();
       }
 
+      // Scale forces based on screen size
+      const forceStrength = Math.min(dimensions.width, dimensions.height) / 1000;
+
       const newSimulation = simulation || d3.forceSimulation(networkData.nodes)
         .force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
-          return linkDistances[d.type] || 100;
+          const scaledDistance = (linkDistances[d.type] || 100) * forceStrength;
+          return Math.max(scaledDistance, 30); // Minimum distance
         }))
         .force("charge", d3.forceManyBody().strength(d => {
+          const baseStrength = forceStrength * -200;
           switch(d.type) {
-            case 'root': return -800;
-            case 'sector': return -600;
-            case 'subsector': return -400;
-            case 'organization': return -300;
-            case 'distribution': return -250;
-            case 'community': return -200;
-            default: return -200;
+            case 'root': return baseStrength * 4;
+            case 'sector': return baseStrength * 3;
+            case 'subsector': return baseStrength * 2;
+            case 'organization': return baseStrength * 1.5;
+            case 'distribution': return baseStrength * 1.25;
+            case 'community': return baseStrength;
+            default: return baseStrength;
           }
         }))
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide().radius(d => d.size + 5));
+        .force("center", d3.forceCenter(dimensions.width / 2, dimensions.height / 2))
+        .force("collision", d3.forceCollide().radius(d => {
+          const scaledSize = d.size * forceStrength + 5;
+          return Math.max(scaledSize, 10);
+        }));
 
-      // Filter links based on visibility
       const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
       console.log("Visible links count:", visibleLinks.length, "Types:", visibleLinkTypes);
 
-      // Update links
       const linkSelection = g.selectAll("line")
         .data(visibleLinks, (d: any) => `${d.source.id || d.source}-${d.target.id || d.target}`);
 
@@ -306,11 +328,10 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           }
         })
         .attr("stroke-opacity", 0.6)
-        .attr("stroke-width", 2)
+        .attr("stroke-width", Math.max(2 * forceStrength, 1))
         .attr("stroke-dasharray", d => d.type === 'structure' ? "0" : "5,5")
         .style("animation", d => d.type !== 'structure' ? "flow 2s linear infinite" : "none");
 
-      // Add CSS animation for flowing lines only once
       if (!document.querySelector('#flow-animation-style')) {
         const style = document.createElement('style');
         style.id = 'flow-animation-style';
@@ -323,7 +344,6 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         document.head.appendChild(style);
       }
 
-      // Update nodes only if simulation doesn't exist
       if (!simulation) {
         const nodeSelection = g.selectAll(".node-group")
           .data(networkData.nodes, (d: any) => d.id);
@@ -352,22 +372,24 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
             }));
 
         nodeEnter.append("circle")
-          .attr("r", (d: Node) => d.size)
+          .attr("r", (d: Node) => Math.max(d.size * forceStrength, 8))
           .attr("fill", (d: Node) => d.color)
           .attr("stroke", (d: Node) => d.color)
-          .attr("stroke-width", 2);
+          .attr("stroke-width", Math.max(2 * forceStrength, 1));
 
         nodeEnter.append("text")
-          .text((d: Node) => d.name.length > 20 ? d.name.substring(0, 18) + "..." : d.name)
-          .attr("dy", (d: Node) => d.size + 15)
+          .text((d: Node) => {
+            const maxLength = dimensions.width < 768 ? 12 : 20;
+            return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + "..." : d.name;
+          })
+          .attr("dy", (d: Node) => Math.max(d.size * forceStrength, 8) + 15)
           .attr("text-anchor", "middle")
-          .style("font-size", "10px")
+          .style("font-size", `${Math.max(10 * forceStrength, 8)}px`)
           .style("fill", "white");
 
         const node = nodeEnter.merge(nodeSelection);
 
         node.on("click", (event, d) => {
-          // Always show the modal first
           onNodeSelect(d);
         });
 
@@ -381,9 +403,9 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           node.attr("transform", (d: Node) => `translate(${d.x},${d.y})`);
         });
       } else {
-        // Update the link force with visible links and current distances
         newSimulation.force("link", d3.forceLink(visibleLinks).id((d: any) => d.id).distance(d => {
-          return linkDistances[d.type] || 100;
+          const scaledDistance = (linkDistances[d.type] || 100) * forceStrength;
+          return Math.max(scaledDistance, 30);
         }));
         
         newSimulation.alpha(0.3).restart();
@@ -406,16 +428,16 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           newSimulation.stop();
         }
       };
-    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes, linkDistances]);
+    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes, linkDistances, dimensions]);
 
     return (
-      <div className="w-full h-full bg-slate-900 rounded-lg overflow-hidden">
+      <div ref={containerRef} className="w-full h-full bg-slate-900 rounded-lg overflow-hidden">
         <svg
           ref={svgRef}
           width="100%"
           height="100%"
-          viewBox="0 0 800 600"
           className="w-full h-full cursor-move"
+          style={{ minHeight: '100%' }}
         />
       </div>
     );

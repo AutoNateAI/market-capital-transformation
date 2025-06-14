@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,7 +135,6 @@ const Graph = () => {
           <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2 md:space-x-4">
-                {/* Mobile sidebar trigger */}
                 <div className="md:hidden">
                   <SidebarTrigger className="text-white hover:bg-slate-700/50" />
                 </div>
@@ -154,7 +154,6 @@ const Graph = () => {
               </div>
               
               <div className="flex items-center space-x-1 md:space-x-3">
-                {/* Desktop buttons */}
                 <div className="hidden md:flex items-center space-x-3">
                   <Button
                     variant="outline"
@@ -206,7 +205,6 @@ const Graph = () => {
                   </Button>
                 </div>
 
-                {/* Mobile action buttons */}
                 <div className="md:hidden flex items-center space-x-1">
                   <Button
                     variant="outline"
@@ -286,8 +284,8 @@ const Graph = () => {
           </div>
         </header>
 
-        {/* Main Content */}
-        <div className="pt-16 md:pt-20 h-screen">
+        {/* Main Content with proper responsive layout */}
+        <div className="flex w-full min-h-screen">
           {/* Desktop Sidebar */}
           <Sidebar className="hidden md:flex border-slate-700 bg-slate-800/30 backdrop-blur-sm">
             <SidebarContent className="overflow-y-auto">
@@ -310,16 +308,20 @@ const Graph = () => {
             </SidebarContent>
           </Sidebar>
 
-          <SidebarInset>
-            {/* Graph Visualization */}
-            <div className="h-full relative">
-              <NetworkGraph
-                ref={networkRef}
-                onNodeSelect={setSelectedNode}
-                isTraversalMode={isTraversalMode}
-                traversalPath={traversalPath}
-                onTraversalPathUpdate={setTraversalPath}
-              />
+          <SidebarInset className="flex-1">
+            {/* Graph Visualization with proper responsive container */}
+            <div className="pt-16 md:pt-20 h-screen w-full relative">
+              <div className="absolute inset-0 p-2 md:p-4">
+                <div className="w-full h-full">
+                  <NetworkGraph
+                    ref={networkRef}
+                    onNodeSelect={setSelectedNode}
+                    isTraversalMode={isTraversalMode}
+                    traversalPath={traversalPath}
+                    onTraversalPathUpdate={setTraversalPath}
+                  />
+                </div>
+              </div>
             </div>
           </SidebarInset>
         </div>
