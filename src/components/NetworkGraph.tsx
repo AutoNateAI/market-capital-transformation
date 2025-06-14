@@ -96,6 +96,13 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       button: 0
     });
 
+    // Touch state for pinch-to-zoom
+    const [touchState, setTouchState] = useState({
+      initialDistance: 0,
+      initialScale: 1,
+      touches: [] as Touch[]
+    });
+
     // Network data
     const [networkData, setNetworkData] = useState<NetworkData>({
       nodes: [
@@ -196,6 +203,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
       return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
+    };
+
+    const getTouchDistance = (touch1: Touch, touch2: Touch) => {
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
     };
 
     const handleModalMouseDown = (e: React.MouseEvent) => {
@@ -322,7 +335,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     // Mouse and touch controls for rotation and panning
     useEffect(() => {
       const handleStart = (clientX: number, clientY: number, button: number = 0) => {
-        // Don't start graph interaction if modal is hovered
+        // Don't start graph interaction if modal is hovered or being manipulated
         if (isModalHovered || isDraggingModal || isResizingModal) return;
         
         setMouseState({
@@ -361,10 +374,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       const handleEnd = () => {
         setMouseState(prev => ({ ...prev, isDown: false }));
+        setTouchState({ initialDistance: 0, initialScale: 1, touches: [] });
       };
 
       // Mouse events
       const handleMouseDown = (e: MouseEvent) => {
+        // Don't interfere with modal interactions
         if (showControlModal && controlModalRef.current?.contains(e.target as Element)) return;
         e.preventDefault();
         handleStart(e.clientX, e.clientY, e.button);
@@ -374,21 +389,47 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         handleMove(e.clientX, e.clientY);
       };
 
-      // Touch events
+      // Enhanced touch events with pinch-to-zoom
       const handleTouchStart = (e: TouchEvent) => {
+        // Don't interfere with modal interactions
         if (showControlModal && controlModalRef.current?.contains(e.target as Element)) return;
-        e.preventDefault();
-        if (e.touches.length === 1) {
-          const touch = e.touches[0];
+        
+        const touches = Array.from(e.touches);
+        
+        if (touches.length === 1) {
+          // Single touch - pan or rotate
+          const touch = touches[0];
           handleStart(touch.clientX, touch.clientY);
+        } else if (touches.length === 2 && interactionMode === 'pan-zoom') {
+          // Two finger pinch - zoom
+          e.preventDefault();
+          const distance = getTouchDistance(touches[0], touches[1]);
+          setTouchState({
+            initialDistance: distance,
+            initialScale: transform.scale,
+            touches: touches
+          });
         }
       };
 
       const handleTouchMove = (e: TouchEvent) => {
-        e.preventDefault();
-        if (e.touches.length === 1) {
-          const touch = e.touches[0];
+        const touches = Array.from(e.touches);
+        
+        if (touches.length === 1 && touchState.touches.length <= 1) {
+          // Single touch - pan or rotate
+          const touch = touches[0];
           handleMove(touch.clientX, touch.clientY);
+        } else if (touches.length === 2 && touchState.initialDistance > 0 && interactionMode === 'pan-zoom') {
+          // Two finger pinch - zoom
+          e.preventDefault();
+          const currentDistance = getTouchDistance(touches[0], touches[1]);
+          const scaleChange = currentDistance / touchState.initialDistance;
+          const newScale = Math.max(0.1, Math.min(3, touchState.initialScale * scaleChange));
+          
+          setTransform(prev => ({
+            ...prev,
+            scale: newScale
+          }));
         }
       };
 
@@ -424,7 +465,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         container.addEventListener('wheel', handleWheel, { passive: false });
         container.addEventListener('contextmenu', (e) => e.preventDefault());
         
-        // Touch events
+        // Touch events with proper passive settings
         container.addEventListener('touchstart', handleTouchStart, { passive: false });
         container.addEventListener('touchmove', handleTouchMove, { passive: false });
         container.addEventListener('touchend', handleTouchEnd, { passive: false });
@@ -440,7 +481,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           container.removeEventListener('touchend', handleTouchEnd);
         };
       }
-    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button, interactionMode, showControlModal, isModalHovered, isDraggingModal, isResizingModal]);
+    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button, interactionMode, showControlModal, isModalHovered, isDraggingModal, isResizingModal, transform.scale, touchState]);
 
     // Reset transform function
     const resetView = () => {
@@ -786,48 +827,67 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
     return (
       <div ref={containerRef} className="w-full h-full bg-slate-900 rounded-lg overflow-hidden relative">
-        {/* Simplified Top Controls */}
+        {/* Enhanced Top Controls with better touch support */}
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <Button
-            onClick={() => setShowControlModal(!showControlModal)}
-            className="px-3 py-1 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors touch-manipulation"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowControlModal(!showControlModal);
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowControlModal(!showControlModal);
+            }}
+            className="px-3 py-2 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors touch-manipulation select-none"
+            style={{ touchAction: 'manipulation' }}
           >
             <Settings className="w-4 h-4 mr-1" />
             Controls
           </Button>
           <Button
             onClick={resetView}
-            className="px-3 py-1 rounded text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors touch-manipulation"
+            className="px-3 py-2 rounded text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors touch-manipulation select-none"
+            style={{ touchAction: 'manipulation' }}
           >
             Reset View
           </Button>
         </div>
 
-        {/* Enhanced Control Modal */}
+        {/* Enhanced Control Modal with improved mobile support */}
         {showControlModal && (
           <div
             ref={controlModalRef}
-            className="fixed select-none touch-none"
+            className="fixed select-none"
             style={{
               left: `${controlModalPosition.x}px`,
               top: `${controlModalPosition.y}px`,
               width: `${controlModalSize.width}px`,
               height: `${controlModalSize.height}px`,
-              zIndex: 9999, // Ensure it's above everything
+              zIndex: 99999, // Very high z-index to ensure it's above everything
               transform: isDraggingModal || isResizingModal ? 'scale(1.02)' : 'scale(1)',
-              transition: isDraggingModal || isResizingModal ? 'none' : 'transform 0.2s ease'
+              transition: isDraggingModal || isResizingModal ? 'none' : 'transform 0.2s ease',
+              touchAction: 'none' // Prevent default touch behaviors
             }}
             onMouseEnter={() => setIsModalHovered(true)}
             onMouseLeave={() => setIsModalHovered(false)}
             onTouchStart={(e) => {
-              setIsModalHovered(true);
               e.stopPropagation();
+              setIsModalHovered(true);
             }}
-            onTouchEnd={() => setIsModalHovered(false)}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              setIsModalHovered(false);
+            }}
           >
             <Card className="bg-slate-800/98 border-slate-600 backdrop-blur-sm shadow-2xl h-full flex flex-col">
               <CardHeader 
                 className="pb-2 cursor-move flex-shrink-0 touch-manipulation"
+                style={{ touchAction: 'none' }}
                 onMouseDown={handleModalMouseDown}
                 onTouchStart={handleModalTouchStart}
               >
@@ -840,13 +900,27 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowControlModal(false)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowControlModal(false);
+                    }}
                     className="text-slate-400 hover:text-white p-1 h-auto touch-manipulation"
+                    style={{ touchAction: 'manipulation' }}
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 flex-1 overflow-y-auto overscroll-contain">
+              <CardContent 
+                className="space-y-4 flex-1 overflow-y-auto overscroll-contain"
+                style={{ 
+                  touchAction: 'pan-y', // Allow vertical scrolling only
+                  overflowScrolling: 'touch' // iOS smooth scrolling
+                }}
+                onWheel={(e) => e.stopPropagation()} // Prevent wheel events from bubbling to graph
+                onTouchMove={(e) => e.stopPropagation()} // Prevent touch events from bubbling to graph
+              >
                 {/* Interaction Mode */}
                 <div>
                   <h4 className="text-white font-medium mb-3">Interaction Mode</h4>
@@ -855,6 +929,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                       variant={interactionMode === 'pan-zoom' ? "default" : "outline"}
                       onClick={() => setInteractionMode('pan-zoom')}
                       className="w-full justify-start text-sm py-2 touch-manipulation"
+                      style={{ touchAction: 'manipulation' }}
                     >
                       <div className="flex items-center">
                         <Move className="w-4 h-4 mr-2" />
@@ -866,6 +941,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
                       variant={interactionMode === 'rotate' ? "default" : "outline"}
                       onClick={() => setInteractionMode('rotate')}
                       className="w-full justify-start text-sm py-2 touch-manipulation"
+                      style={{ touchAction: 'manipulation' }}
                     >
                       <RotateCw className="w-4 h-4 mr-2" />
                       Rotate Mode
@@ -950,7 +1026,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
               
               {/* Resize Handle */}
               <div
-                className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize touch-none"
+                className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize"
+                style={{ touchAction: 'none' }}
                 onMouseDown={handleModalResizeStart}
                 onTouchStart={handleModalResizeTouchStart}
               >
@@ -965,7 +1042,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           width="100%"
           height="100%"
           className="w-full h-full cursor-move"
-          style={{ minHeight: '100%' }}
+          style={{ minHeight: '100%', overflow: 'hidden' }}
         />
       </div>
     );
