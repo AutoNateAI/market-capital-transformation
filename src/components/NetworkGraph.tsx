@@ -1,6 +1,9 @@
 import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RotateCw, Move, ZoomIn, Settings, X, GripVertical, Maximize2 } from "lucide-react";
 
 interface Node {
   id: string;
@@ -52,6 +55,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
   ({ onNodeSelect, isTraversalMode, traversalPath, onTraversalPathUpdate }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
+    const controlModalRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
     const [simulation, setSimulation] = useState<d3.Simulation<Node, Link> | null>(null);
@@ -63,7 +67,17 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       'knowledge-flow': 100
     });
 
-    // Rotation and pan state
+    // Control modal state
+    const [showControlModal, setShowControlModal] = useState(false);
+    const [controlModalPosition, setControlModalPosition] = useState({ x: 20, y: 20 });
+    const [controlModalSize, setControlModalSize] = useState({ width: 320, height: 240 });
+    const [isDraggingModal, setIsDraggingModal] = useState(false);
+    const [isResizingModal, setIsResizingModal] = useState(false);
+    const [modalDragOffset, setModalDragOffset] = useState({ x: 0, y: 0 });
+    const [modalResizeStart, setModalResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+
+    // Interaction mode and transform state
+    const [interactionMode, setInteractionMode] = useState<'rotate' | 'pan' | 'zoom'>('pan');
     const [transform, setTransform] = useState({
       rotation: 0,
       scale: 1,
@@ -78,6 +92,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       button: 0
     });
 
+    // Network data
     const [networkData, setNetworkData] = useState<NetworkData>({
       nodes: [
         { id: "root", name: "Community Distribution Network", type: "root", color: "#FFFFFF", size: 20 },
@@ -171,6 +186,109 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       ]
     });
 
+    // Modal drag and resize handlers
+    const getEventCoordinates = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
+    };
+
+    const handleModalMouseDown = (e: React.MouseEvent) => {
+      if (!controlModalRef.current) return;
+      
+      const rect = controlModalRef.current.getBoundingClientRect();
+      setModalDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDraggingModal(true);
+    };
+
+    const handleModalTouchStart = (e: React.TouchEvent) => {
+      if (!controlModalRef.current || e.touches.length !== 1) return;
+      
+      const rect = controlModalRef.current.getBoundingClientRect();
+      const touch = e.touches[0];
+      setModalDragOffset({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      });
+      setIsDraggingModal(true);
+    };
+
+    const handleModalResizeStart = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setModalResizeStart({
+        x: e.clientX,
+        y: e.clientY,
+        width: controlModalSize.width,
+        height: controlModalSize.height
+      });
+      setIsResizingModal(true);
+    };
+
+    const handleModalResizeTouchStart = (e: React.TouchEvent) => {
+      e.stopPropagation();
+      if (e.touches.length !== 1) return;
+      
+      const touch = e.touches[0];
+      setModalResizeStart({
+        x: touch.clientX,
+        y: touch.clientY,
+        width: controlModalSize.width,
+        height: controlModalSize.height
+      });
+      setIsResizingModal(true);
+    };
+
+    // Modal drag/resize effect
+    useEffect(() => {
+      const handleMove = (e: MouseEvent | TouchEvent) => {
+        const coords = getEventCoordinates(e);
+        
+        if (isDraggingModal) {
+          const newX = coords.x - modalDragOffset.x;
+          const newY = coords.y - modalDragOffset.y;
+          
+          const maxX = window.innerWidth - controlModalSize.width;
+          const maxY = window.innerHeight - controlModalSize.height;
+          
+          setControlModalPosition({
+            x: Math.max(0, Math.min(newX, maxX)),
+            y: Math.max(0, Math.min(newY, maxY))
+          });
+        } else if (isResizingModal) {
+          const deltaX = coords.x - modalResizeStart.x;
+          const deltaY = coords.y - modalResizeStart.y;
+          
+          const newWidth = Math.max(280, Math.min(500, modalResizeStart.width + deltaX));
+          const newHeight = Math.max(200, Math.min(400, modalResizeStart.height + deltaY));
+          
+          setControlModalSize({ width: newWidth, height: newHeight });
+        }
+      };
+
+      const handleEnd = () => {
+        setIsDraggingModal(false);
+        setIsResizingModal(false);
+      };
+
+      if (isDraggingModal || isResizingModal) {
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchmove', handleMove, { passive: false });
+        document.addEventListener('touchend', handleEnd);
+      }
+
+      return () => {
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('mouseup', handleEnd);
+        document.removeEventListener('touchmove', handleMove);
+        document.removeEventListener('touchend', handleEnd);
+      };
+    }, [isDraggingModal, isResizingModal, modalDragOffset, modalResizeStart, controlModalSize]);
+
     // Responsive dimensions calculation
     useEffect(() => {
       const updateDimensions = () => {
@@ -206,12 +324,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         const deltaX = clientX - mouseState.lastX;
         const deltaY = clientY - mouseState.lastY;
         
-        if (mouseState.button === 0) { // Left click or touch - rotate
+        if (interactionMode === 'rotate') {
           setTransform(prev => ({
             ...prev,
             rotation: prev.rotation + deltaX * 0.5
           }));
-        } else if (mouseState.button === 2) { // Right click - pan
+        } else if (interactionMode === 'pan') {
           setTransform(prev => ({
             ...prev,
             translateX: prev.translateX + deltaX,
@@ -232,6 +350,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       // Mouse events
       const handleMouseDown = (e: MouseEvent) => {
+        if (showControlModal && controlModalRef.current?.contains(e.target as Node)) return;
         e.preventDefault();
         handleStart(e.clientX, e.clientY, e.button);
       };
@@ -242,6 +361,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       // Touch events
       const handleTouchStart = (e: TouchEvent) => {
+        if (showControlModal && controlModalRef.current?.contains(e.target as Node)) return;
         e.preventDefault();
         if (e.touches.length === 1) {
           const touch = e.touches[0];
@@ -264,6 +384,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       // Wheel/pinch for zoom
       const handleWheel = (e: WheelEvent) => {
+        if (interactionMode !== 'zoom') return;
         e.preventDefault();
         
         const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -299,7 +420,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           container.removeEventListener('touchend', handleTouchEnd);
         };
       }
-    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button]);
+    }, [mouseState.isDown, mouseState.lastX, mouseState.lastY, mouseState.button, interactionMode, showControlModal]);
 
     // Reset transform function
     const resetView = () => {
@@ -627,20 +748,117 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
     return (
       <div ref={containerRef} className="w-full h-full bg-slate-900 rounded-lg overflow-hidden relative">
-        <div className="absolute top-4 left-4 z-10 bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-white text-xs">
-          <div className="font-semibold mb-2">Controls:</div>
-          <div>Left Click/Touch: Rotate • Right Click: Pan</div>
-          <div>Scroll/Pinch: Zoom</div>
+        {/* Top Controls */}
+        <div className="absolute top-4 left-4 z-10 flex gap-2">
+          <div className="bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 text-white text-xs">
+            <div className="font-semibold mb-2">Mode: {interactionMode}</div>
+            <div>Touch/Click & Drag: {interactionMode === 'rotate' ? 'Rotate' : interactionMode === 'pan' ? 'Pan' : 'Use scroll for zoom'}</div>
+          </div>
         </div>
         
-        <div className="absolute top-4 right-4 z-10">
-          <button
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <Button
+            onClick={() => setShowControlModal(!showControlModal)}
+            className="px-3 py-1 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
+            <Settings className="w-4 h-4 mr-1" />
+            Controls
+          </Button>
+          <Button
             onClick={resetView}
             className="px-3 py-1 rounded text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"
           >
             Reset View
-          </button>
+          </Button>
         </div>
+
+        {/* Control Modal */}
+        {showControlModal && (
+          <div
+            ref={controlModalRef}
+            className="fixed z-50 select-none touch-none"
+            style={{
+              left: `${controlModalPosition.x}px`,
+              top: `${controlModalPosition.y}px`,
+              width: `${controlModalSize.width}px`,
+              height: `${controlModalSize.height}px`,
+              transform: isDraggingModal || isResizingModal ? 'scale(1.02)' : 'scale(1)',
+              transition: isDraggingModal || isResizingModal ? 'none' : 'transform 0.2s ease'
+            }}
+          >
+            <Card className="bg-slate-800/95 border-slate-600 backdrop-blur-sm shadow-2xl h-full flex flex-col">
+              <CardHeader 
+                className="pb-2 cursor-move flex-shrink-0"
+                onMouseDown={handleModalMouseDown}
+                onTouchStart={handleModalTouchStart}
+              >
+                <CardTitle className="text-blue-300 text-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="w-4 h-4 text-slate-400" />
+                    Graph Controls
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowControlModal(false)}
+                    className="text-slate-400 hover:text-white p-1 h-auto"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 flex-1 overflow-y-auto">
+                <div>
+                  <h4 className="text-white font-medium mb-2">Interaction Mode</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    <Button
+                      variant={interactionMode === 'pan' ? "default" : "outline"}
+                      onClick={() => setInteractionMode('pan')}
+                      className="w-full justify-start text-sm py-2"
+                    >
+                      <Move className="w-4 h-4 mr-2" />
+                      Pan Mode
+                    </Button>
+                    <Button
+                      variant={interactionMode === 'rotate' ? "default" : "outline"}
+                      onClick={() => setInteractionMode('rotate')}
+                      className="w-full justify-start text-sm py-2"
+                    >
+                      <RotateCw className="w-4 h-4 mr-2" />
+                      Rotate Mode
+                    </Button>
+                    <Button
+                      variant={interactionMode === 'zoom' ? "default" : "outline"}
+                      onClick={() => setInteractionMode('zoom')}
+                      className="w-full justify-start text-sm py-2"
+                    >
+                      <ZoomIn className="w-4 h-4 mr-2" />
+                      Zoom Mode
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-white font-medium mb-2">Current Transform</h4>
+                  <div className="text-xs text-slate-300 space-y-1">
+                    <div>Rotation: {Math.round(transform.rotation)}°</div>
+                    <div>Scale: {transform.scale.toFixed(2)}x</div>
+                    <div>Position: ({Math.round(transform.translateX)}, {Math.round(transform.translateY)})</div>
+                  </div>
+                </div>
+              </CardContent>
+              
+              {/* Resize Handle */}
+              <div
+                className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize touch-none"
+                onMouseDown={handleModalResizeStart}
+                onTouchStart={handleModalResizeTouchStart}
+              >
+                <Maximize2 className="w-4 h-4 text-slate-400 absolute bottom-1 right-1" />
+              </div>
+            </Card>
+          </div>
+        )}
 
         <svg
           ref={svgRef}
