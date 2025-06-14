@@ -18,6 +18,13 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const legendRef = useRef<HTMLDivElement>(null);
 
+  const getEventCoordinates = (e: MouseEvent | TouchEvent) => {
+    if ('touches' in e && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!legendRef.current) return;
     
@@ -25,6 +32,18 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
     setDragOffset({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
+    });
+    setIsDragging(true);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!legendRef.current || e.touches.length !== 1) return;
+    
+    const rect = legendRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    setDragOffset({
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top
     });
     setIsDragging(true);
   };
@@ -40,11 +59,27 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
     setIsResizing(true);
   };
 
+  const handleResizeTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    setResizeStart({
+      x: touch.clientX,
+      y: touch.clientY,
+      width: size.width,
+      height: size.height
+    });
+    setIsResizing(true);
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const coords = getEventCoordinates(e);
+      
       if (isDragging) {
-        const newX = e.clientX - dragOffset.x;
-        const newY = e.clientY - dragOffset.y;
+        const newX = coords.x - dragOffset.x;
+        const newY = coords.y - dragOffset.y;
         
         const maxX = window.innerWidth - size.width;
         const maxY = window.innerHeight - size.height;
@@ -54,8 +89,8 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
           y: Math.max(0, Math.min(newY, maxY))
         });
       } else if (isResizing) {
-        const deltaX = e.clientX - resizeStart.x;
-        const deltaY = e.clientY - resizeStart.y;
+        const deltaX = coords.x - resizeStart.x;
+        const deltaY = coords.y - resizeStart.y;
         
         const newWidth = Math.max(250, Math.min(500, resizeStart.width + deltaX));
         const newHeight = Math.max(300, Math.min(600, resizeStart.height + deltaY));
@@ -64,19 +99,23 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
       }
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsDragging(false);
       setIsResizing(false);
     };
 
     if (isDragging || isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('mouseup', handleEnd);
+      document.addEventListener('touchmove', handleMove, { passive: false });
+      document.addEventListener('touchend', handleEnd);
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
     };
   }, [isDragging, isResizing, dragOffset, resizeStart, size]);
 
@@ -85,7 +124,7 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
   return (
     <div
       ref={legendRef}
-      className="fixed z-50 select-none"
+      className="fixed z-50 select-none touch-none"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -99,6 +138,7 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
         <CardHeader 
           className="pb-2 cursor-move flex-shrink-0"
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
         >
           <CardTitle className="text-blue-300 text-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -186,10 +226,11 @@ export const GraphLegend = ({ isVisible, onToggle }: GraphLegendProps) => {
         
         {/* Resize Handle */}
         <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize touch-none"
           onMouseDown={handleResizeStart}
+          onTouchStart={handleResizeTouchStart}
         >
-          <Maximize2 className="w-3 h-3 text-slate-400 absolute bottom-1 right-1" />
+          <Maximize2 className="w-4 h-4 text-slate-400 absolute bottom-1 right-1" />
         </div>
       </Card>
     </div>
