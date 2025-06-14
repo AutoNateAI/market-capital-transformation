@@ -1,0 +1,119 @@
+
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient definitions for vibrant colors -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+    </linearGradient>
+    
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:0" />
+    </radialGradient>
+    
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#34d399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Animated flow effect -->
+    <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+      <animateTransform attributeName="gradientTransform" type="translate" values="-100 0;200 0;-100 0" dur="3s" repeatCount="indefinite"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Floating particles for ambiance -->
+  <circle cx="100" cy="150" r="2" fill="#60a5fa" opacity="0.6">
+    <animate attributeName="cy" values="150;120;150" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1100" cy="200" r="1.5" fill="#34d399" opacity="0.4">
+    <animate attributeName="cy" values="200;170;200" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="200" cy="500" r="1" fill="#fbbf24" opacity="0.5">
+    <animate attributeName="cy" values="500;480;500" dur="5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Network visualization -->
+  <!-- Central hub node -->
+  <circle cx="600" cy="315" r="40" fill="url(#nodeGlow)"/>
+  <circle cx="600" cy="315" r="25" fill="#60a5fa" stroke="#93c5fd" stroke-width="3"/>
+  
+  <!-- Surrounding nodes -->
+  <circle cx="450" cy="200" r="20" fill="#34d399" stroke="#6ee7b7" stroke-width="2"/>
+  <circle cx="750" cy="180" r="18" fill="#f59e0b" stroke="#fbbf24" stroke-width="2"/>
+  <circle cx="380" cy="350" r="16" fill="#ef4444" stroke="#fca5a5" stroke-width="2"/>
+  <circle cx="820" cy="320" r="22" fill="#8b5cf6" stroke="#c4b5fd" stroke-width="2"/>
+  <circle cx="500" cy="450" r="14" fill="#06b6d4" stroke="#67e8f9" stroke-width="2"/>
+  <circle cx="700" cy="480" r="16" fill="#ec4899" stroke="#f9a8d4" stroke-width="2"/>
+  
+  <!-- Outer ring nodes -->
+  <circle cx="300" cy="120" r="12" fill="#10b981" opacity="0.8"/>
+  <circle cx="900" cy="100" r="10" fill="#f97316" opacity="0.8"/>
+  <circle cx="250" cy="500" r="8" fill="#3b82f6" opacity="0.8"/>
+  <circle cx="950" cy="520" r="11" fill="#d946ef" opacity="0.8"/>
+  
+  <!-- Animated connection lines -->
+  <line x1="600" y1="315" x2="450" y2="200" stroke="url(#flowGradient)" stroke-width="3" opacity="0.7"/>
+  <line x1="600" y1="315" x2="750" y2="180" stroke="#34d399" stroke-width="2" opacity="0.6" stroke-dasharray="5,5">
+    <animate attributeName="stroke-dashoffset" values="0;10;0" dur="2s" repeatCount="indefinite"/>
+  </line>
+  <line x1="600" y1="315" x2="380" y2="350" stroke="#f59e0b" stroke-width="2" opacity="0.6"/>
+  <line x1="600" y1="315" x2="820" y2="320" stroke="#ef4444" stroke-width="3" opacity="0.7"/>
+  <line x1="600" y1="315" x2="500" y2="450" stroke="#8b5cf6" stroke-width="2" opacity="0.6"/>
+  <line x1="600" y1="315" x2="700" y2="480" stroke="#06b6d4" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Secondary connections -->
+  <line x1="450" y1="200" x2="300" y2="120" stroke="#60a5fa" stroke-width="1.5" opacity="0.4"/>
+  <line x1="750" y1="180" x2="900" y2="100" stroke="#34d399" stroke-width="1.5" opacity="0.4"/>
+  <line x1="500" y1="450" x2="250" y2="500" stroke="#f59e0b" stroke-width="1.5" opacity="0.4"/>
+  <line x1="820" y1="320" x2="950" y2="520" stroke="#ef4444" stroke-width="1.5" opacity="0.4"/>
+  
+  <!-- Main headline -->
+  <text x="600" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#textGradient)">
+    UNLOCK THE POWER
+  </text>
+  <text x="600" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#textGradient)">
+    OF CONNECTIONS
+  </text>
+  
+  <!-- Subheadline -->
+  <text x="600" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#e2e8f0">
+    AI-Powered Graph Theory • Visualize Complex Networks • Strategic Intelligence
+  </text>
+  
+  <!-- Call to action -->
+  <rect x="480" y="520" width="240" height="45" rx="22" fill="#3b82f6" stroke="#60a5fa" stroke-width="2"/>
+  <text x="600" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">
+    EXPLORE NETWORKS
+  </text>
+  
+  <!-- Brand attribution -->
+  <text x="50" y="600" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#94a3b8">
+    Powered by AutoNateAI
+  </text>
+  
+  <!-- Visual elements for impact -->
+  <circle cx="150" cy="315" r="3" fill="#60a5fa">
+    <animate attributeName="r" values="3;6;3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1050" cy="315" r="2" fill="#34d399">
+    <animate attributeName="r" values="2;5;2" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Data flow indicators -->
+  <path d="M 100 300 Q 200 250 300 300" stroke="#60a5fa" stroke-width="2" fill="none" opacity="0.5" stroke-dasharray="4,4">
+    <animate attributeName="stroke-dashoffset" values="0;8;0" dur="1s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 900 350 Q 1000 300 1100 350" stroke="#34d399" stroke-width="2" fill="none" opacity="0.5" stroke-dasharray="4,4">
+    <animate attributeName="stroke-dashoffset" values="0;8;0" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+</svg>
