@@ -1,4 +1,3 @@
-
 import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +44,7 @@ interface NetworkGraphProps {
 export interface NetworkGraphRef {
   downloadGraph: () => void;
   addDataToNetwork: (data: any) => void;
+  updateVisibleLinks: (linkTypes: string[]) => void;
 }
 
 export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
@@ -52,6 +52,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
     const svgRef = useRef<SVGSVGElement>(null);
     const { toast } = useToast();
     const [simulation, setSimulation] = useState<d3.Simulation<Node, Link> | null>(null);
+    const [visibleLinkTypes, setVisibleLinkTypes] = useState<string[]>(['structure', 'grant-flow', 'service-flow', 'knowledge-flow']);
+    
     const [networkData, setNetworkData] = useState<NetworkData>({
       nodes: [
         { id: "root", name: "Community Distribution Network", type: "root", color: "#FFFFFF", size: 15 },
@@ -71,15 +73,15 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         { id: "nih", name: "National Institutes of Health", type: "organization", color: "#96CEB4", size: 8, grants: ["Medical Research: $42B"], channels: 4 },
         { id: "tech-corps", name: "Tech Companies", type: "organization", color: "#96CEB4", size: 8, grants: ["Digital Equity: $2.5B", "STEM Ed: $1.2B"], channels: 6 },
         { id: "health-corps", name: "Healthcare Companies", type: "organization", color: "#96CEB4", size: 8, grants: ["Health Equity: $1.8B"], channels: 3 },
-        { id: "health-centers", name: "Community Health Centers", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "schools", name: "Educational Institutions", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "libraries", name: "Public Libraries", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "community-centers", name: "Community Centers", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "extension", name: "Extension Programs", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "online", name: "Digital Platforms", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "mobile-units", name: "Mobile Services", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "nonprofits", name: "Nonprofit Partners", type: "distribution", color: "#FFEAA7", size: 8 },
-        { id: "workforce", name: "Workforce Centers", type: "distribution", color: "#FFEAA7", size: 8 },
+        { id: "health-centers", name: "Community Health Centers", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "schools", name: "Educational Institutions", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "libraries", name: "Public Libraries", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "community-centers", name: "Community Centers", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "extension", name: "Extension Programs", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "online", name: "Digital Platforms", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "mobile-units", name: "Mobile Services", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "nonprofits", name: "Nonprofit Partners", type: "distribution", color: "#FFEAA7", size: 6 },
+        { id: "workforce", name: "Workforce Centers", type: "distribution", color: "#FFEAA7", size: 6 },
         { id: "rural", name: "Rural Communities", type: "community", color: "#DDA0DD", size: 5, population: "60M", needs: ["Healthcare", "Broadband", "Economic Development"] },
         { id: "urban", name: "Urban Communities", type: "community", color: "#DDA0DD", size: 5, population: "80M", needs: ["Housing", "Education", "Healthcare"] },
         { id: "seniors", name: "Senior Citizens", type: "community", color: "#DDA0DD", size: 5, population: "54M", needs: ["Healthcare", "Technology", "Social Services"] },
@@ -145,6 +147,10 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       ]
     });
 
+    const updateVisibleLinks = (linkTypes: string[]) => {
+      setVisibleLinkTypes(linkTypes);
+    };
+
     useImperativeHandle(ref, () => ({
       downloadGraph: () => {
         const dataStr = JSON.stringify(networkData, null, 2);
@@ -160,8 +166,50 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       },
       addDataToNetwork: (data: any) => {
         console.log("Adding data to network:", data);
-      }
+      },
+      updateVisibleLinks
     }));
+
+    const initializeRadialPositions = () => {
+      const centerX = 400;
+      const centerY = 300;
+      
+      // Define sector angles for perfect 120-degree separation
+      const sectorAngles = {
+        'gov': -Math.PI / 2, // Top (270 degrees)
+        'edu': -Math.PI / 2 + (2 * Math.PI / 3), // Bottom left (30 degrees)
+        'biz': -Math.PI / 2 + (4 * Math.PI / 3) // Bottom right (150 degrees)
+      };
+
+      networkData.nodes.forEach(node => {
+        if (node.type === 'root') {
+          node.x = centerX;
+          node.y = centerY;
+          node.fx = centerX;
+          node.fy = centerY;
+        } else if (node.type === 'sector') {
+          const angle = sectorAngles[node.id as keyof typeof sectorAngles];
+          if (angle !== undefined) {
+            node.x = centerX + Math.cos(angle) * 120;
+            node.y = centerY + Math.sin(angle) * 120;
+            node.fx = node.x;
+            node.fy = node.y;
+          }
+        } else if (node.type === 'subsector') {
+          // Position subsectors extending from their parent sectors
+          const parentSector = node.id.startsWith('fed') || node.id.startsWith('state') ? 'gov' :
+                              node.id.startsWith('research') || node.id.startsWith('community') ? 'edu' :
+                              node.id.startsWith('corp') || node.id.startsWith('sme') ? 'biz' : null;
+          
+          if (parentSector) {
+            const angle = sectorAngles[parentSector as keyof typeof sectorAngles];
+            const offset = node.id.includes('fed') || node.id.includes('research') || node.id.includes('corp') ? -0.3 : 0.3;
+            node.x = centerX + Math.cos(angle + offset) * 200;
+            node.y = centerY + Math.sin(angle + offset) * 200;
+          }
+        }
+      });
+    };
 
     useEffect(() => {
       if (!svgRef.current) return;
@@ -183,28 +231,8 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
 
       svg.call(zoom);
 
-      // Position nodes in radial hierarchy
-      const centerX = width / 2;
-      const centerY = height / 2;
-      
-      // Initialize positions
-      networkData.nodes.forEach(d => {
-        if (d.type === 'root') {
-          d.x = centerX;
-          d.y = centerY;
-        } else if (d.type === 'sector') {
-          const sectorAngles = {
-            'gov': -Math.PI / 2,
-            'edu': -Math.PI / 2 + (2 * Math.PI / 3),
-            'biz': -Math.PI / 2 + (4 * Math.PI / 3)
-          };
-          const angle = sectorAngles[d.id as keyof typeof sectorAngles];
-          if (angle !== undefined) {
-            d.x = centerX + Math.cos(angle) * 150;
-            d.y = centerY + Math.sin(angle) * 150;
-          }
-        }
-      });
+      // Initialize radial positions
+      initializeRadialPositions();
 
       const newSimulation = d3.forceSimulation(networkData.nodes)
         .force("link", d3.forceLink(networkData.links).id((d: any) => d.id).distance(d => {
@@ -230,9 +258,12 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
         .force("center", d3.forceCenter(width / 2, height / 2))
         .force("collision", d3.forceCollide().radius(d => d.size + 5));
 
+      // Filter links based on visibility
+      const visibleLinks = networkData.links.filter(link => visibleLinkTypes.includes(link.type));
+
       const link = g.append("g")
         .selectAll("line")
-        .data(networkData.links)
+        .data(visibleLinks)
         .join("line")
         .attr("stroke", d => {
           switch(d.type) {
@@ -243,7 +274,19 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           }
         })
         .attr("stroke-opacity", 0.6)
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", d => d.type === 'structure' ? "0" : "5,5")
+        .style("animation", d => d.type !== 'structure' ? "flow 2s linear infinite" : "none");
+
+      // Add CSS animation for flowing lines
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes flow {
+          0% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: 20; }
+        }
+      `;
+      document.head.appendChild(style);
 
       const node = g.append("g")
         .selectAll("g")
@@ -262,8 +305,14 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
           })
           .on("end", (event, d) => {
             if (!event.active) newSimulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
+            // Keep root and sector nodes fixed
+            if (d.type === 'root' || d.type === 'sector') {
+              d.fx = d.x;
+              d.fy = d.y;
+            } else {
+              d.fx = null;
+              d.fy = null;
+            }
           }));
 
       node.append("circle")
@@ -307,7 +356,7 @@ export const NetworkGraph = forwardRef<NetworkGraphRef, NetworkGraphProps>(
       return () => {
         newSimulation.stop();
       };
-    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast]);
+    }, [networkData, isTraversalMode, traversalPath, onNodeSelect, onTraversalPathUpdate, toast, visibleLinkTypes]);
 
     return (
       <div className="w-full h-full bg-slate-900 rounded-lg overflow-hidden">

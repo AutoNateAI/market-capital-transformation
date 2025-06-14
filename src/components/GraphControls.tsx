@@ -31,6 +31,28 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
     });
   };
 
+  const handleFilterLinks = (linkTypes: string[]) => {
+    if (networkRef.current && networkRef.current.updateVisibleLinks) {
+      networkRef.current.updateVisibleLinks(linkTypes);
+    }
+  };
+
+  const showAllConnections = () => {
+    handleFilterLinks(['structure', 'grant-flow', 'service-flow', 'knowledge-flow']);
+  };
+
+  const showGrantFlowOnly = () => {
+    handleFilterLinks(['structure', 'grant-flow']);
+  };
+
+  const showServiceFlowOnly = () => {
+    handleFilterLinks(['structure', 'service-flow']);
+  };
+
+  const showKnowledgeFlowOnly = () => {
+    handleFilterLinks(['structure', 'knowledge-flow']);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <Card className="bg-slate-800/50 border-slate-700">
@@ -41,25 +63,29 @@ export const GraphControls = ({ networkRef, isTraversalMode, traversalPath }: Gr
           <div className="space-y-2">
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              onClick={showAllConnections}
+              className="w-full border-slate-600 text-white bg-slate-700/50 hover:bg-slate-600 hover:text-white"
             >
               Show All Connections
             </Button>
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              onClick={showGrantFlowOnly}
+              className="w-full border-green-600 text-green-400 bg-slate-700/50 hover:bg-green-600 hover:text-white"
             >
               Grant Flow Only
             </Button>
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              onClick={showServiceFlowOnly}
+              className="w-full border-blue-600 text-blue-400 bg-slate-700/50 hover:bg-blue-600 hover:text-white"
             >
               Service Flow Only
             </Button>
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              onClick={showKnowledgeFlowOnly}
+              className="w-full border-orange-600 text-orange-400 bg-slate-700/50 hover:bg-orange-600 hover:text-white"
             >
               Knowledge Flow Only
             </Button>
